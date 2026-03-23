@@ -2,123 +2,83 @@
 
 ## Roadmap Overview
 
-The roadmap is intentionally sequenced so the product first becomes a dependable student operations hub, then adds AI-driven study assistance on top of stable data structures.
+The roadmap follows a local-first strategy. The product must become a trustworthy offline student workspace before optional sync or AI features are introduced.
 
-## Phase 1: Core Workspace
-
-### Goal
-
-Deliver a secure, usable academic workspace covering the main organizational jobs a student must perform regularly.
-
-### Scope
-
-- authentication and session management
-- course management
-- file upload and categorization
-- file search and filtering
-- calendar event management
-- reminder configuration
-- dashboard overview
-
-### Expected Outcomes
-
-- one authenticated workspace per student
-- a coherent relationship between courses, files, events, and reminders
-- enough product structure to support later AI features without schema churn
-
-### Milestones
-
-- M1: repository and documentation foundation
-- M2: Next.js app scaffold and design system baseline
-- M3: Supabase authentication and protected routing
-- M4: course CRUD and dashboard shell
-- M5: file upload, listing, search, and filtering
-- M6: calendar events and reminder configuration
-- M7: Phase 1 QA, polish, and deployment hardening
-
-## Phase 2: AI Summaries
+## Phase 1: Offline-First Core Workspace
 
 ### Goal
 
-Generate useful study summaries from academic files without changing the core workspace model.
+Deliver a fully usable local workspace for student organization with no backend requirement.
 
 ### Scope
 
-- summary jobs attached to stored files
-- summary status tracking and result persistence
-- summary viewing inside file detail or course context
-- failure handling and retry behavior
-
-### Expected Outcomes
-
-- a student can request an AI summary for supported material
-- summaries are stored and can be revisited
-- the system separates generated artifacts from source files cleanly
+- bilingual English and French UI
+- local Dexie persistence
+- courses CRUD
+- offline file manager with previews
+- local calendar with multiple views
+- reminders and notification center
+- dashboard
+- settings
+- automated tests and responsive UX
 
 ### Milestones
 
-- M1: summary-ready file processing design
-- M2: summary generation workflow and storage model
-- M3: summary UI integration
-- M4: prompt quality, error handling, and guardrails
+- M1: documentation rewrite and local architecture scaffold
+- M2: persistence, repositories, i18n, and test infrastructure
+- M3: courses and file manager
+- M4: calendar and event workflows
+- M5: reminders, notifications, dashboard, and settings
+- M6: responsive polish, QA, and implementation report
 
-## Phase 3: AI Quiz Generation
+## Phase 2: Local Backup and Sync Readiness
 
 ### Goal
 
-Turn course materials and summaries into structured quiz content that helps exam preparation.
+Prepare the local-first application for optional export, backup, and future sync without breaking Phase 1.
 
 ### Scope
 
-- quiz generation requests tied to files, summaries, or courses
-- quiz persistence with question records
-- quiz metadata such as topic, difficulty, and source linkage
+- structured export/import of local workspace data
+- sync-safe identifiers and conflict-aware repository extensions
+- optional backup workflows
+- architecture decisions for remote adapters
 
-### Expected Outcomes
+### Rationale
 
-- a student can generate a quiz from selected study material
-- generated quiz content is stored and traceable to its source
-- quiz artifacts can be reused in future study sessions
+Before introducing remote sync, the app should support controlled data portability and preserve a clear repository boundary.
 
-### Milestones
-
-- M1: quiz domain schema and generation workflow
-- M2: question model and validation rules
-- M3: quiz listing and detail views
-- M4: generation quality tuning and cost controls
-
-## Phase 4: Quiz Interaction and Extended Study Workflow
+## Phase 3: AI Summaries
 
 ### Goal
 
-Turn generated quiz content into an active study loop with review and progress signals.
+Add AI-generated study summaries on top of the stable local domain model.
 
 ### Scope
 
-- quiz-taking experience
-- answer capture and feedback
-- study history and completion tracking
-- future expansion into recommendations or spaced review
+- summary jobs linked to file metadata
+- generated summary persistence
+- summary display inside file and course contexts
 
-### Expected Outcomes
+### Rationale
 
-- a student can interact with generated quizzes inside the app
-- quiz attempts become part of a broader study workflow
-- the app begins to function as a study assistant, not only an organizer
+Summaries should consume existing file data instead of reshaping the file manager around AI.
 
-### Milestones
+## Phase 4: Quiz Generation and Study Workflow
 
-- M1: quiz session UX
-- M2: answer evaluation and result tracking
-- M3: study history surfaces
-- M4: extended review workflow design
+### Goal
 
-## Rationale for Ordering
+Extend the workspace into an active study assistant with quizzes and structured review flows.
 
-The roadmap follows a dependency-first sequence:
+### Scope
 
-1. The product needs trusted user data, file storage, and event organization before AI can produce anything useful.
-2. Summaries come before quizzes because quiz generation should operate on stable source material and, ideally, on normalized summary artifacts.
-3. Quiz interaction comes after quiz generation because it depends on the existence of persistent question data.
+- quiz generation from files or summaries
+- quiz question persistence
+- interactive study sessions
+- future progress tracking
 
-This order reduces rework, lowers delivery risk, and keeps the MVP grounded in real student utility even if AI features arrive later than expected.
+### Rationale for Ordering
+
+1. A reliable local workspace is more valuable than premature AI.
+2. Export and sync readiness should come before remote infrastructure.
+3. AI features should build on stable source data and not distort Phase 1 architecture.

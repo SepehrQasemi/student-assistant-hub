@@ -4,234 +4,148 @@
 
 ### Purpose
 
-Serve as the public entry page for the product and route signed-in users toward the workspace.
+Redirect entry route to the working dashboard while keeping a stable home URL.
 
 ### Primary Components
 
-- hero section
-- concise product explanation
-- roadmap-aware value summary
-- login and signup call-to-action
+- redirect or lightweight shell handoff
 
 ### Key User Actions
 
-- navigate to login
-- navigate to signup
-- understand the product focus before creating an account
-
-### Empty States
-
-- not applicable in the traditional data sense
+- open the application
 
 ### Future Enhancements
 
-- richer marketing content
-- feature snapshots for AI phases after they exist
-
-## `/login`
-
-### Purpose
-
-Authenticate returning users into their private workspace.
-
-### Primary Components
-
-- login form
-- validation messages
-- password recovery entry point
-
-### Key User Actions
-
-- enter credentials
-- submit login
-- navigate to signup if no account exists
-
-### Empty States
-
-- not applicable
-
-### Future Enhancements
-
-- magic link or social login, if justified later
-
-## `/signup`
-
-### Purpose
-
-Register a new user and create the foundation of a private workspace.
-
-### Primary Components
-
-- signup form
-- password requirements helper text
-- auth success and error feedback
-
-### Key User Actions
-
-- create an account
-- confirm credentials
-- move into first-time onboarding
-
-### Empty States
-
-- not applicable
-
-### Future Enhancements
-
-- lightweight onboarding prompts such as timezone or study term
+- optional landing or onboarding screen if export/sync features are added later
 
 ## `/dashboard`
 
 ### Purpose
 
-Provide a high-level operational overview of the student workspace.
+Give the student an immediate overview of workload, recent activity, and upcoming reminders.
 
 ### Primary Components
 
-- summary cards
-- upcoming events list
-- upcoming reminders list
-- recent files section
-- quick action buttons
+- summary metric cards
+- recent files panel
+- upcoming deadlines panel
+- upcoming exams panel
+- reminder widget
+- this-week events panel
+- quick actions
 
 ### Key User Actions
 
-- review near-term workload
-- jump into files, courses, or calendar
-- identify missing setup steps in a new workspace
+- understand what matters now
+- navigate quickly into files, courses, calendar, and settings
 
 ### Empty States
 
 - no courses yet
-- no files yet
-- no upcoming events
-- first-use guidance with clear actions
-
-### Future Enhancements
-
-- AI summary highlights
-- quiz progress indicators
-- smarter prioritization panels
+- no files imported yet
+- no upcoming events yet
 
 ## `/courses`
 
 ### Purpose
 
-Manage the set of courses that structure the rest of the workspace.
+Manage courses locally and provide the academic structure that files and events can attach to.
 
 ### Primary Components
 
 - course list
-- create and edit course modal or page
-- course metadata display
-- archive controls
+- create/edit course dialog
+- delete confirmation
+- responsive card layout
 
 ### Key User Actions
 
-- create a course
-- edit course metadata
-- archive a course
-- use a course as a filter context
+- create course
+- edit course
+- delete course
 
 ### Empty States
 
-- no courses created yet
-- guidance to create the first course before organizing files and events
-
-### Future Enhancements
-
-- per-course detail pages
-- course-level study analytics
+- guided message explaining why courses matter for file and calendar organization
 
 ## `/files`
 
 ### Purpose
 
-Manage uploaded academic files and their metadata.
+Provide the core offline file workspace for importing, organizing, and previewing academic files.
 
 ### Primary Components
 
-- upload area
-- file list or table
-- search input
-- course filter
-- category filter
-- file metadata editor
+- file import panel
+- search and filter controls
+- list/grid view toggle
+- file table or file cards
+- file detail dialog
+- preview panel
 
 ### Key User Actions
 
-- upload files
-- assign or change course
-- assign category
-- search and filter
-- inspect metadata
+- import one or multiple files
+- assign files to courses
+- rename metadata
+- add notes
+- tag files
+- filter and sort
+- delete file
 
 ### Empty States
 
-- no files uploaded yet
-- filtered search returns no results
-
-### Future Enhancements
-
-- file preview
-- AI summary request action
-- bulk organization tools
+- no files imported yet
+- filters produce no matching files
 
 ## `/calendar`
 
 ### Purpose
 
-Manage time-based academic activity such as classes, deadlines, exams, and study sessions.
+Manage local academic planning through multiple calendar views and event filters.
 
 ### Primary Components
 
-- event list or calendar grid
-- create and edit event form
-- reminder configuration section
-- course-based event filtering
+- view switcher for day, week, month, quarter, and agenda
+- filter controls
+- event list or calendar surface
+- create/edit event dialog
+- event detail side panel or dialog
 
 ### Key User Actions
 
-- create an event
-- edit an event
+- create event
+- edit event
+- delete event
+- assign event to course
 - attach reminders
-- browse by date
+- switch views
 
 ### Empty States
 
 - no events created yet
-- guidance to add the first academic event
-
-### Future Enhancements
-
-- alternate calendar views
-- external calendar sync
-- AI-assisted study session suggestions
 
 ## `/settings`
 
 ### Purpose
 
-Manage user-level preferences and account-related settings.
+Manage local app preferences and capability settings.
 
 ### Primary Components
 
-- profile settings
-- timezone settings
-- reminder defaults, if introduced
-- account actions
+- language selector
+- notification preference controls
+- calendar preference controls
+- storage information section
+- app information section
 
 ### Key User Actions
 
-- update display preferences
-- review account information
-- sign out
+- switch language
+- request notification permission
+- choose default calendar view
+- review local storage information
 
 ### Empty States
 
-- not applicable beyond unset optional profile fields
-
-### Future Enhancements
-
-- notification channel settings
-- AI preference controls
+- not applicable beyond unset preferences

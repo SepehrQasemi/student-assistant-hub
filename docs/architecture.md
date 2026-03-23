@@ -1,144 +1,119 @@
 # Architecture Direction
 
-## Intended Stack
+## Primary Architecture
 
-The planned implementation stack for Student Assistant Hub is:
+Student Assistant Hub Phase 1 is a fully local, offline-first web application. It runs entirely in the browser and stores primary data in IndexedDB through Dexie.
 
-- Next.js
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- Supabase Auth
-- Supabase Postgres
-- Supabase Storage
+There is no backend in Phase 1.
 
-The intended deployment target is Vercel.
+## Main Libraries
 
-## High-Level Architecture
+- Next.js App Router for routing and UI composition
+- TypeScript for typed domain and persistence contracts
+- Tailwind CSS for styling
+- shadcn/ui-style component architecture for reusable UI primitives
+- Dexie for IndexedDB access and schema versioning
+- React Hook Form + Zod for forms and validation
+- FullCalendar for calendar rendering across required views
+- Notifications API for browser-level notifications where supported
+- Vitest and Testing Library for automated tests
+- Playwright for end-to-end coverage where feasible
 
-Student Assistant Hub should be built as a web application with a clear split between:
+## Architectural Layers
 
-- presentation and interaction logic in Next.js
-- identity, persistence, and storage in Supabase
+### UI / Pages / Components
 
-At a high level:
+Responsibilities:
 
-1. The user accesses the application through the Next.js frontend.
-2. Authentication is handled through Supabase Auth.
-3. Domain records such as courses, files, events, and reminders are stored in Supabase Postgres.
-4. Uploaded documents are stored in Supabase Storage, with metadata stored in Postgres.
-5. The dashboard, files, and calendar views query normalized domain records rather than tightly coupling UI to storage details.
+- page layout and route composition
+- feature presentation
+- form interaction
+- empty, loading, and error states
+- responsive behavior
 
-## Frontend Modules
+Rules:
 
-The future frontend should be organized into the following logical modules:
+- UI must not directly read or write IndexedDB
+- user-facing text must go through the i18n layer
 
-### Authentication
+### Application Logic / Services
 
-- login and signup views
-- session handling
-- protected route access
-- sign-out and account recovery flows
+Responsibilities:
 
-### Dashboard
+- feature orchestration
+- dashboard aggregation
+- file filtering and sorting rules
+- reminder scheduling logic
+- notification workflows
+- browser capability checks
 
-- upcoming events summary
-- upcoming reminders summary
-- recent file activity
-- quick links into courses, files, and calendar
+### Repository Layer
 
-### Courses
+Responsibilities:
 
-- course list
-- create and edit course workflows
-- course-level filtering context for files and events
+- CRUD access to courses, files, tags, events, reminders, notifications, and settings
+- ownership of persistence-specific details
+- migration-friendly data access boundaries
 
-### Files
+This layer is the seam that allows future sync adapters to be introduced later.
 
-- upload interface
-- file list and file metadata views
-- search and filter controls
-- course assignment and category assignment
+### Local Persistence Layer
 
-### Calendar
+Responsibilities:
 
-- event list or calendar grid views
-- event create and edit workflow
-- course-linked and standalone events
+- Dexie database definition
+- schema versioning
+- table initialization
+- IndexedDB access utilities
 
-### Reminders
+### i18n Layer
 
-- reminder configuration attached to events
-- reminder timing display
-- future extension point for delivery channels
+Responsibilities:
 
-## Backend and Data Responsibilities
+- locale dictionaries
+- translation lookup
+- runtime locale switching
+- persistence of the selected language
 
-### Next.js Responsibilities
+### Reminder Scheduling / Notification Engine
 
-- routing and page composition
-- server/client rendering boundaries
-- UI state management
-- form submission handling
-- orchestration of data access through a centralized app layer
+Responsibilities:
 
-### Supabase Responsibilities
+- evaluating due reminders
+- creating in-app notifications
+- requesting browser notification permission
+- sending browser notifications only when supported and allowed
 
-- user authentication
-- row-level data storage in Postgres
-- file object storage
-- row-level security policies for private user workspaces
+## High-Level Data Flow
 
-### Data Access Layer Responsibilities
+1. A page or client feature component triggers a user action.
+2. The action calls a service or repository-facing hook.
+3. Services coordinate repository calls and domain logic.
+4. Repositories persist or query local data through Dexie.
+5. UI updates through Dexie-backed live queries and local state.
 
-The repository should eventually include a shared application layer in `lib/` that:
+## Local-First Design Principles
 
-- centralizes Supabase client creation
-- isolates database and storage operations from UI components
-- encodes domain rules such as ownership checks, category validation, and reminder constraints
+- store metadata separately from derived presentation state
+- keep entity IDs stable using `crypto.randomUUID()`
+- include timestamps on all primary entities
+- prefer additive schemas over implicit state hidden in components
+- isolate browser APIs such as Notifications and file previews behind services or utilities
 
-## Current Phase vs Future AI Modules
+## Future Sync Extensibility
 
-Phase 1 must keep the core domain independent from AI concerns.
+The application is intentionally designed so future sync can be added without rewriting the UI:
 
-Phase 1 domain:
+- repositories are a dedicated layer
+- local entities already carry sync-safe IDs and timestamps
+- delete operations can be represented with soft-delete semantics where useful
+- service logic does not assume Dexie is the only possible backing store forever
 
-- profiles
-- courses
-- files
-- events
-- reminders
+## Browser Limitation Policy
 
-Future AI domain:
+The implementation must remain honest:
 
-- summaries
-- quizzes
-- quiz questions
-- quiz attempts or study progress, if later introduced
-
-Key rule:
-
-AI artifacts should depend on the core domain, not the other way around. Files, courses, and events must remain usable even if AI jobs are unavailable or disabled.
-
-## Future Extensibility Notes
-
-To keep the architecture production-minded, the following extensibility decisions should be respected:
-
-- store file metadata separately from raw storage objects
-- preserve stable entity identifiers from the start
-- keep controlled values for file categories and event types
-- use row-level security rather than only trusting client-side filtering
-- avoid putting AI processing logic directly inside basic CRUD modules
-- prefer additive tables for summaries and quizzes instead of mutating core entities
-
-## Recommended Initial Boundaries
-
-The first implementation pass should maintain these boundaries:
-
-- `app/`: routes, layouts, page-level composition
-- `components/`: reusable UI blocks
-- `lib/`: auth, database, storage, validation, and domain services
-- `types/`: shared domain types and DTO definitions
-- `supabase/`: schema, policies, storage conventions, and migration assets
-
-These boundaries are sufficient for Phase 1 and provide a clean seam for later AI services.
+- IndexedDB availability depends on the browser context
+- notification delivery cannot be guaranteed when the app is not running
+- unsupported file formats fall back to metadata display instead of fake previews
+- offline-first means no server dependency, not native-background guarantees

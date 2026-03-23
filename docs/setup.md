@@ -2,72 +2,88 @@
 
 ## Current Repository State
 
-This repository is currently in planning and foundation mode. It contains documentation, directory structure, and repository bootstrapping artifacts only. It does not yet contain a runnable Next.js application or installed dependencies.
-
-The next implementation phase should scaffold the application into the existing structure and then connect the app to Supabase.
-
-## Intended Local Setup Steps
-
-When implementation begins, the recommended local setup flow is:
-
-1. Install the required tools listed below.
-2. Clone the repository.
-3. Copy `.env.example` to a local environment file such as `.env.local`.
-4. Create and configure the Supabase project.
-5. Scaffold the Next.js application and install dependencies.
-6. Add the Supabase integration and verify authentication.
-7. Run the app locally and validate the Phase 1 pages.
+This repository now targets a fully local Phase 1 implementation. The application does not require any backend service, cloud storage, or authentication provider to run.
 
 ## Required Tools
 
 - Node.js 20 or newer
-- npm, pnpm, or yarn
-- Git
-- GitHub CLI for repository operations, if GitHub workflows are used locally
-- Supabase account and project access
-- Vercel account for deployment in later steps
+- npm 10 or newer
+- a modern Chromium-based browser, Firefox, or Safari with IndexedDB support
+- Playwright browsers for end-to-end tests, if running the E2E suite
+
+If Playwright browsers are not installed yet, run:
+
+```bash
+npx playwright install
+```
+
+## Local Setup
+
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+3. Open the local app in your browser.
+
+The workspace stores application data in IndexedDB. No additional service is required.
+
+## Test Commands
+
+Unit and component tests:
+
+```bash
+npm run test
+```
+
+Linting:
+
+```bash
+npm run lint
+```
+
+End-to-end tests:
+
+```bash
+npm run test:e2e
+```
+
+Production build:
+
+```bash
+npm run build
+```
 
 ## Environment Variables
 
-The intended environment variables for the first implementation phase are:
+Phase 1 does not require backend credentials.
 
-- `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `SUPABASE_STORAGE_BUCKET`
+The `.env.example` file is intentionally minimal and exists only for optional display-level configuration. The app should still run without any custom environment file.
 
-See `.env.example` for the repository baseline.
+## Offline-First Expectations
 
-## Future Supabase Setup Expectations
+- all primary application data is stored in IndexedDB
+- the app remains usable without cloud services
+- browser storage quotas still apply
+- clearing site data will remove the local workspace unless backup/export is added in a future phase
 
-The first implementation should provision:
+## Notifications
 
-- a Supabase project
-- authentication for user accounts
-- Postgres tables for profiles, courses, files, events, and reminders
-- storage buckets for academic files
-- row-level security policies that isolate each user's data
+Browser notifications are optional and depend on:
 
-Recommended expectations:
+- user permission
+- browser support
+- the app being able to execute reminder checks
 
-- keep auth and database ownership aligned through `user_id`
-- create migrations under `supabase/` once the schema is introduced
-- define storage naming conventions early to avoid later object path migrations
+They are helpful but not guaranteed like native background notifications.
 
-## Future Deployment Target
+## Future Deployment Direction
 
-The intended deployment target is Vercel for the Next.js frontend, with Supabase providing backend services.
-
-Expected deployment responsibilities:
-
-- Vercel hosts the web application
-- Supabase handles auth, database, and storage
-- environment variables are set in both local and hosted environments
-
-## Notes for the Next Build Phase
-
-- do not introduce AI tooling during the initial scaffold
-- implement the Phase 1 domain first
-- keep the repo structure aligned with the documentation
-- update the documentation if architectural choices materially change during implementation
+The app can be deployed like a normal Next.js application later, but Phase 1 does not depend on any hosted backend. The main persistence boundary remains local Dexie repositories.

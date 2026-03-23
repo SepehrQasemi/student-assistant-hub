@@ -1,34 +1,30 @@
 # Agent Guidance
 
-This repository is documentation-first. Coding agents must treat the documentation as the source of truth until implementation begins.
+This repository is an offline-first student workspace. Coding agents must preserve that architecture unless the user explicitly changes the product direction.
 
 ## Required Working Rules
 
-- Read `README.md` and the relevant files under `docs/` before making code changes.
-- Respect the current roadmap phase. Do not implement Phase 2, Phase 3, or Phase 4 features during Phase 1 work.
-- Do not add AI features early. Summaries, quizzes, and study workflows are explicitly deferred.
-- Produce a short plan before making substantial edits.
+- Read the relevant docs before making substantial changes.
+- Respect the current roadmap phase.
+- Do not add backend or cloud dependencies in Phase 1.
+- Do not add AI features in Phase 1.
+- Produce a short plan before major edits.
 - Summarize changed files after each task.
-- Provide manual verification steps for anything you change.
-- Avoid introducing unrelated dependencies.
-- Preserve clean architecture boundaries between `app/`, `components/`, `lib/`, `types/`, and `supabase/`.
+- Provide manual verification steps after each task.
+- Keep the repository, service, and persistence boundaries clean.
 
-## Scope Discipline
+## Architecture Rules
 
-- Keep Phase 1 focused on auth, courses, files, calendar, reminders, and dashboard behavior.
-- Treat reminder configuration as in scope, but do not silently expand into complex notification infrastructure unless the task explicitly requires it.
-- Keep future AI entities additive and isolated from the core domain.
+- Pages and feature components must not write to IndexedDB directly.
+- Persistence must go through repositories.
+- Reminder scheduling must stay behind a dedicated engine or service layer.
+- User-facing strings must be sourced from the i18n layer.
+- File preview logic must remain honest about unsupported formats.
 
-## Architecture Discipline
+## Quality Rules
 
-- Use the stack documented in `docs/architecture.md` unless the user explicitly approves a change.
-- Keep Supabase-specific access code out of presentational UI components.
-- Prefer small, domain-oriented modules over large mixed-responsibility files.
-- Update documentation when architecture, data model, or scope decisions change.
-
-## Change Hygiene
-
-- Do not create broad scaffolding or dependencies that the repository does not need yet.
-- Do not rewrite existing structure without checking how it affects the documented plan.
-- Keep naming consistent with the controlled values and domain terminology in `docs/data-model.md`.
-- If a task exposes a contradiction in the docs, fix the documentation alongside the code or clearly report the conflict.
+- Avoid giant components with mixed responsibilities.
+- Prefer small, domain-aligned modules with clear names.
+- Keep responsive behavior intentional, not accidental.
+- Add tests for new behavior rather than relying on manual confidence.
+- Update docs when architecture, runtime limits, or product behavior changes.

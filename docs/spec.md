@@ -2,111 +2,112 @@
 
 ## Product Overview
 
-Student Assistant Hub is a personal academic workspace for students who need one place to manage courses, files, deadlines, exams, calendar events, and reminders. The product is designed to reduce organizational friction first, then layer in AI-assisted study features after the core workspace is stable.
+Student Assistant Hub is an offline-first student workspace for organizing academic life locally in the browser. It is designed for students who need serious day-to-day support for courses, files, deadlines, exams, reminders, and weekly planning without depending on a backend service.
+
+Phase 1 is intentionally local-first. It prioritizes reliability, clarity, and realistic browser behavior over cloud connectivity or AI features.
 
 ## Problem Statement
 
-Students frequently manage their academic life across disconnected tools:
+Students routinely work across disconnected tools:
 
-- course materials in cloud storage or messaging threads
-- deadlines in personal calendars
-- reminders in phone apps
-- study notes in documents or notebooks
-- exam preparation in separate tools
+- folders for lecture files
+- calendar tools for deadlines
+- reminder apps for exams
+- notes apps for personal study
+- course information spread across documents and chats
 
-This fragmentation creates avoidable problems:
+That fragmentation causes real operational problems:
 
-- lost files or unclear file ownership by course
-- missed deadlines because reminders are not connected to academic context
-- no single dashboard showing upcoming academic workload
-- duplicated manual work when switching between calendar, files, and course organization
+- files become hard to find later
+- deadlines lose context because they are not connected to courses
+- reminders are easy to miss when they live in separate tools
+- there is no single dashboard showing what matters this week
 
-Student Assistant Hub addresses this by building a focused academic operations layer before adding AI features.
+Student Assistant Hub solves this first as a structured local workspace, then leaves room for optional sync and AI later.
 
 ## Target Users
 
-Primary target users:
+Primary users:
 
-- university students managing multiple courses at once
-- students who work with many academic documents and deadlines
-- students who want a structured, private workspace rather than a generic file drive
+- students managing several courses at once
+- students handling many academic files and deadlines
+- students who want a privacy-friendly workspace that still works without online services
 
-Secondary target users:
+Secondary users:
 
-- students preparing for exams who will later benefit from AI summaries and quizzes
-- students who want a single academic planning hub across desktop and mobile browsers
+- students who plan to use future sync or AI features later
+- students using a laptop-first workflow but needing responsive browser support on smaller screens
 
 ## Primary Use Cases
 
-- create a personal account and access a private workspace
-- create and manage courses for a term or semester
-- upload academic files and assign them to courses
-- browse, search, and filter files by course and category
-- create calendar events such as classes, deadlines, exams, and study sessions
-- attach reminder rules to events
-- review a dashboard summarizing upcoming academic activity
+- create and maintain a course list
+- import local study files and keep them organized
+- assign files and events to courses
+- preview supported file types without leaving the workspace
+- plan classes, deadlines, exams, meetings, and personal study sessions
+- create multiple reminders for a single event
+- review a dashboard for upcoming deadlines, exams, reminders, and recent files
+- switch the application between English and French
 
 ## Phase 1 Scope
 
-Phase 1 delivers the operational core of the product:
+Phase 1 includes:
 
-- authentication and private user workspace access
-- course creation and management
-- file metadata management and storage-backed uploads
-- file browsing, search, and filtering
-- calendar event management
-- reminder configuration for events
-- dashboard overview of upcoming work, recent files, and core counts
-
-Phase 1 should emphasize reliability, clarity, and maintainable structure over feature breadth.
+- bilingual application UI with English and French dictionaries
+- local persistence through IndexedDB
+- course CRUD
+- offline file manager with local blob storage and realistic previews
+- calendar with day, week, month, quarter, and agenda views
+- reminders and notification center
+- dashboard with useful summaries
+- settings for language, notification preferences, and local app behavior
+- automated tests and responsive UX
 
 ## Out of Scope for Phase 1
 
-The following items are explicitly excluded from Phase 1:
+Phase 1 does not include:
 
-- AI-generated file summaries
+- Supabase, Firebase, or any hosted backend
+- online authentication
+- multi-device sync
+- collaborative workspaces
+- AI summaries
 - AI quiz generation
-- interactive quiz sessions
-- collaborative workspaces or shared courses
-- real-time multi-user editing
-- advanced notification delivery channels such as push notifications
-- OCR pipelines or automatic file content extraction beyond basic metadata capture
-- complex analytics or study recommendations
-
-Reminder configuration is in scope. Sophisticated reminder delivery orchestration is not.
+- advanced background notification guarantees beyond browser capabilities
+- pretending unsupported file formats are previewable when they are not
 
 ## Success Criteria for Phase 1
 
 Phase 1 is successful when a student can:
 
-- sign up and log in securely
-- create at least one course
-- upload and categorize files
-- search and filter those files with predictable results
-- create events tied to a course or standalone academic activity
-- configure reminder timing on those events
-- open the dashboard and quickly understand upcoming responsibilities
+- use the application without any cloud dependency
+- switch between English and French without partial translations
+- create, edit, and delete courses locally
+- import and manage files locally with metadata, notes, filters, and sorting
+- preview PDFs, images, and plain text files where browser support exists
+- create, edit, filter, and review events across multiple calendar views
+- configure and manage multiple reminders per event
+- use the dashboard to understand what matters now
 
 Engineering-level success criteria:
 
-- authenticated data isolation is enforced
-- storage metadata remains consistent with database records
-- core pages load with clear empty states
-- the codebase is structured to add AI modules later without rewriting core domain models
+- persistence is routed through repositories rather than page components
+- IndexedDB schemas are versioned and migration-friendly
+- reminder behavior is abstracted behind a scheduler layer
+- tests validate real behavior across repositories, services, and selected UI flows
 
 ## Constraints and Assumptions
 
 ### Constraints
 
-- the product should start as a web application
-- the implementation stack is fixed for the initial build direction
-- the initial system should be simple enough to deploy on Vercel and operate with Supabase services
-- Phase 1 should avoid introducing AI dependencies or infrastructure
+- the product must be fully usable without remote services
+- the application must remain honest about browser notification and storage limits
+- user-facing strings should be translatable through one consistent i18n strategy
+- the file manager is the most important module in Phase 1
 
 ### Assumptions
 
-- each authenticated user owns a fully private workspace
-- file uploads are stored in Supabase Storage and indexed in Postgres
-- events and reminders belong to a single user, with optional course association
-- the first implementation can prioritize manual data entry over automation
-- reminder functionality in Phase 1 may be limited to configuration and in-app visibility until a dedicated delivery mechanism is added
+- the app is used by a single person per browser profile
+- local data loss can occur if the user clears browser storage
+- browser notifications are opportunistic and depend on permission plus the app being able to execute
+- future sync should extend the repository layer rather than force a rewrite of the UI

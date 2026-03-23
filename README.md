@@ -1,78 +1,104 @@
 # Student Assistant Hub
 
-Student Assistant Hub is a web-based student workspace for managing courses, academic files, deadlines, exams, calendar events, and reminders in one place.
+Student Assistant Hub is an offline-first student workspace for managing courses, academic files, deadlines, calendar events, reminders, and study organization in one place.
 
-This repository currently contains the planning and foundation stage of the product. It is intentionally documentation-first: the goal of this baseline is to lock product scope, architecture direction, data design, and delivery sequencing before feature implementation starts.
+Phase 1 is implemented as a fully local web application foundation. It does not require Supabase, Firebase, or any backend service. All primary data is stored locally in the browser through IndexedDB via Dexie.
 
 ## Product Vision
 
-Students often split their academic workflow across cloud drives, messaging apps, calendars, notes, and ad hoc reminder tools. Student Assistant Hub aims to reduce that fragmentation by providing a single workspace for:
+Students often split their academic workflow across folders, cloud drives, calendars, reminders, and notes tools that do not share context. Student Assistant Hub brings those responsibilities into one productivity workspace with a future path toward optional sync and AI-assisted study features.
 
-- course organization
-- academic file management
-- deadline and exam tracking
-- calendar planning
-- reminder configuration
-- future AI-assisted study support
+Phase 1 focuses on making the local workspace genuinely useful before adding any online dependency:
 
-The near-term objective is to deliver a reliable core workspace. AI features are planned, but they are intentionally deferred until the operational foundation is stable.
+- bilingual UI: English default, French secondary
+- course management
+- offline file workspace with local blob storage
+- full calendar views
+- reminders and in-app notifications
+- dashboard overview
+- settings and storage visibility
+- tests from the start
 
-## Roadmap Summary
+## Phase 1 Scope
 
-- Phase 1: File Manager + Calendar + Dashboard + Auth + Reminder configuration
-- Phase 2: AI summaries
-- Phase 3: AI quiz generation
-- Phase 4: Quiz interaction and extended study workflow
+Phase 1 is complete when the local application can:
 
-## Current Phase Focus
+- create, edit, list, and delete courses
+- import one or multiple files and store them locally
+- filter, search, sort, preview, and organize files
+- create, edit, and delete local calendar events
+- attach multiple reminders to events
+- surface reminders through an in-app notification center
+- switch language between English and French
+- persist settings and workspace data locally
 
-The current focus is Phase 1 planning and repository setup. The implementation target for Phase 1 is a secure, production-minded MVP that allows a student to:
+Phase 1 explicitly excludes:
 
-- authenticate into a private workspace
-- create and manage courses
-- upload and organize academic files
-- create calendar events tied to courses
-- configure reminders for those events
-- review an at-a-glance dashboard of upcoming work
+- cloud sync
+- online authentication
+- AI summaries
+- AI quiz generation
+- collaboration features
 
-Phase 1 does not include AI summaries, quiz generation, or interactive study experiences.
+## Architecture Direction
 
-## Intended Stack Direction
+The application is built with:
 
-The implementation direction defined for the next build phase is:
-
-- Next.js
+- Next.js App Router
 - TypeScript
 - Tailwind CSS
-- shadcn/ui
-- Supabase Auth
-- Supabase Postgres
-- Supabase Storage
-- Vercel for deployment
+- shadcn/ui-style component architecture
+- Dexie for IndexedDB persistence
+- React Hook Form + Zod
+- FullCalendar for calendar rendering
+- Notifications API where the browser allows it
+- Vitest and Testing Library for automated testing
+- Playwright for end-to-end verification where feasible
 
-This stack keeps the initial product lean while still supporting secure authentication, structured data, file storage, and future extensibility for AI workflows.
+The codebase is separated into:
 
-## Repository Structure
+- `app/` for routes and page composition
+- `components/` for reusable UI and feature components
+- `lib/repositories/` for persistence-facing data access
+- `lib/services/` for application behavior and scheduling
+- `lib/db/` for IndexedDB schema and initialization
+- `lib/i18n/` for bilingual translation infrastructure
+- `types/` for domain entities and view models
 
-The repository has been prepared with a clean base structure for the future application:
+## Current Product Priorities
+
+The most important product area in Phase 1 is the offline file manager. It is treated as a serious workspace feature rather than a placeholder uploader. That means:
+
+- local blob storage
+- meaningful metadata
+- notes and tagging support
+- list and grid modes
+- search, filtering, and sorting
+- honest preview support for realistic file types
+
+## Browser and Runtime Constraints
+
+Student Assistant Hub is offline-first, not a native desktop app. The implementation is honest about web platform limits:
+
+- browser notifications only work when permission is granted
+- reminder delivery cannot be guaranteed when the browser is fully closed
+- preview support depends on file type and browser capabilities
+- IndexedDB storage availability and quotas depend on the browser
+
+## Project Structure
 
 ```text
-app/         Next.js app routes and layouts
-components/  Reusable UI components
-docs/        Product, architecture, and delivery documentation
-lib/         Shared application services and integrations
-public/      Static assets
-supabase/    Database, storage, and Supabase-related assets
-types/       Shared TypeScript types and domain models
-TASKS.md     Implementation backlog
-AGENTS.md    Repo-local guidance for coding agents
+app/                Next.js routes and layouts
+components/         UI building blocks and feature components
+docs/               product, architecture, QA, and implementation reports
+lib/db/             Dexie schema and local database utilities
+lib/i18n/           translation dictionaries and i18n helpers
+lib/repositories/   local persistence repositories
+lib/services/       business logic, dashboard, reminder, and notification services
+lib/validation/     Zod schemas and form validation factories
+tests/              unit, component, and end-to-end tests
+types/              shared TypeScript domain types
 ```
-
-## Setup Summary
-
-There is no runnable application in the repository yet. The next implementation phase should scaffold the Next.js application into the existing folder structure, connect Supabase, and begin Phase 1 delivery.
-
-For setup expectations, environment variables, and future deployment notes, see [docs/setup.md](docs/setup.md).
 
 ## Documentation Index
 
@@ -83,10 +109,25 @@ For setup expectations, environment variables, and future deployment notes, see 
 - [User Flows](docs/user-flows.md)
 - [UI Pages](docs/ui-pages.md)
 - [Setup Guide](docs/setup.md)
-- [Decisions](docs/decisions.md)
-- [Non-Goals](docs/non-goals.md)
-- [Bootstrap Report](docs/bootstrap-report.md)
+- [Phase 1 Implementation Report](docs/phase1-implementation-report.md)
+
+## Local Development
+
+After installing dependencies, use:
+
+```bash
+npm run dev
+```
+
+For verification:
+
+```bash
+npm run lint
+npm run build
+npm run test
+npm run test:e2e
+```
 
 ## Status
 
-This repository is ready for the next step: scaffolding the app and implementing Phase 1 against the documented plan.
+This repository contains the offline-first Phase 1 application and its supporting documentation. Future phases should build on this local-first foundation instead of replacing it.
