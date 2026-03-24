@@ -1,156 +1,159 @@
-# UI Page Planning
+# UI Pages
+
+## Design Direction
+
+The app is intentionally calm, minimal, and productivity-oriented. Phase 4 focused on consistency and usability rather than adding a new visual language.
+
+Key Phase 4 UI goals:
+
+- clearer spacing
+- more stable dialog sizing
+- better mobile and tablet behavior
+- better handling of longer French labels
+- cleaner hierarchy between primary and secondary actions
 
 ## `/`
 
 ### Purpose
 
-Redirect entry traffic to the active dashboard while keeping a stable home URL.
+- redirect to the active dashboard entry point
 
 ### Primary Components
 
-- redirect or lightweight shell handoff
+- lightweight redirect handoff
 
 ## `/dashboard`
 
 ### Purpose
 
-Give the student an immediate overview of workload, reminders, upcoming academic events, recent files, and useful navigation shortcuts.
+- give the student an immediate view of workload and near-term priorities
 
 ### Primary Components
 
-- summary metric cards
-- recent files panel
-- upcoming deadlines panel
-- upcoming exams panel
-- reminder widget
-- this-week events panel
+- stat cards
+- recent files
+- upcoming deadlines
+- upcoming exams
+- upcoming reminders
+- events this week
 - quick actions
 
-### Future Enhancements
+### Responsive Notes
 
-- highlight recent quiz activity if that proves useful enough for the dashboard
+- stat cards stack cleanly on smaller widths
+- quick actions wrap instead of clipping
+- localized dates use compact formatting helpers
 
 ## `/courses`
 
 ### Purpose
 
-Manage courses locally and provide the academic structure that files and events attach to.
+- manage the course structure that the rest of the workspace attaches to
 
 ### Primary Components
 
 - course list
-- create/edit course dialog
-- delete confirmation
-- responsive card layout
+- create/edit dialog
+- delete flow
+- color indicators
+
+### Responsive Notes
+
+- course cards remain readable on narrow widths
+- form actions wrap rather than compressing
 
 ## `/files`
 
 ### Purpose
 
-Provide the core offline file workspace for importing, organizing, previewing, summarizing, and now generating quizzes from supported academic files.
+- act as the central product surface for the file workspace, summaries, and quizzes
 
 ### Primary Components
 
-- file import panel
-- search and filter controls
-- list/grid view toggle
-- file table or file cards
+- import dialog
+- search and filter toolbar
+- grid/list toggle
+- recent files panel
+- file cards or list rows
 - file detail dialog
-- preview panel
-- summary tab inside the file detail flow
-- quiz tab inside the file detail flow
-- summary history list
-- quiz history list
+- summary panel
+- quiz panel
 
 ### Key User Actions
 
-- import one or multiple files
-- assign files to courses
-- rename metadata
-- add notes and tags
-- replace a file source while preserving the record
-- run a summary mode on a supported file
-- generate a quiz from a supported file
-- inspect extraction state
-- revisit prior summaries and quizzes
-- see stale summary and stale quiz warnings
+- import files
+- assign or reassign courses
+- edit metadata
+- preview files
+- generate summaries
+- generate quizzes
+- review history
+- replace source files
 
-### Empty States
+### Responsive Notes
 
-- no files imported yet
-- filters produce no matching files
-- selected file has no summaries yet
-- selected file has no quizzes yet
-- selected file is unsupported for summarization or quiz generation
-
-### Future Enhancements
-
-- dedicated summary or quiz comparison views if history becomes dense
+- filters stack instead of overflowing
+- view toggles stay reachable on mobile
+- metadata rows wrap cleanly
+- file detail dialog switches to a single-column flow earlier to reduce crowding
 
 ## `/quizzes/[quizId]`
 
 ### Purpose
 
-Provide a focused quiz-taking and review surface without overloading the file detail dialog.
+- provide a focused surface for taking and reviewing quizzes
 
 ### Primary Components
 
-- quiz overview card
-- start-quiz action
+- start card
 - question player
 - answer controls
-- results and review cards
-- attempt history panel
-- stale quiz badge
+- results and review
+- attempt history
+- stale badge
 
-### Key User Actions
+### Responsive Notes
 
-- start a persisted quiz
-- answer questions sequentially
-- submit a quiz
-- review score and explanations
-- reopen earlier attempts
-- retry the same quiz
-- return to the files workspace
-
-### Empty States
-
-- missing quiz
-- missing attempt
-- loading persisted review state
-
-### Future Enhancements
-
-- richer attempt comparison if history becomes dense
+- one-question-at-a-time flow keeps interaction manageable on smaller screens
+- results and history stack vertically on narrower layouts
+- long prompts and French review labels wrap instead of overflowing
 
 ## `/calendar`
 
 ### Purpose
 
-Manage local academic planning through multiple calendar views and event filters.
+- manage local events and reminders through calendar and agenda views
 
 ### Primary Components
 
-- view switcher for day, week, month, quarter, and agenda
-- filter controls
-- event list or calendar surface
-- create/edit event dialog
-- event detail side panel or dialog
+- view switcher
+- filters
+- FullCalendar surface
+- agenda list
+- event form dialog
+
+### Responsive Notes
+
+- the calendar surface now uses an overflow container with a minimum content width
+- controls remain usable on smaller screens instead of collapsing into unusable density
+- agenda dates are localized through shared helpers
 
 ## `/settings`
 
 ### Purpose
 
-Manage local app preferences and capability settings.
+- manage local preferences, notification behavior, storage visibility, and language
 
 ### Primary Components
 
-- language selector
-- notification preference controls
-- calendar preference controls
-- storage information section
-- app information section
+- language controls
+- notification controls
+- calendar preferences
+- storage information
+- app info
 
-### Future Enhancements
+### Responsive Notes
 
-- export and backup settings once local portability work begins
+- settings cards stack vertically on smaller screens
+- longer French labels remain readable without clipping
+- the header language switcher and page-level settings controls remain visually distinct

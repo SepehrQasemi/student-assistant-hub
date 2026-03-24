@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+import type { Locale } from "@/types/entities";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -45,4 +47,21 @@ export function toDateTimeInputValue(isoString: string) {
 
 export function fromDateTimeInputValue(value: string) {
   return new Date(value).toISOString();
+}
+
+export function getIntlLocale(locale: Locale) {
+  return locale === "fr" ? "fr-FR" : "en-US";
+}
+
+export function formatLocalizedDateTime(value: string, locale: Locale) {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+export function formatLocalizedDate(value: string, locale: Locale) {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
+    dateStyle: "medium",
+  }).format(new Date(value));
 }

@@ -2,14 +2,9 @@
 
 ## Overview
 
-Student Assistant Hub stores Phase 1, Phase 2, and Phase 3 data locally in IndexedDB through Dexie. The schema remains versioned so the application can evolve without collapsing into ad hoc persistence.
+Student Assistant Hub stores all product data locally in IndexedDB through Dexie. The data model now supports the completed workspace, summary, and quiz flows without relying on any backend service.
 
-All primary entities use:
-
-- `id`
-- `createdAt`
-- `updatedAt`
-- optional `deletedAt` where soft delete improves future migration or sync compatibility
+Every primary persisted entity uses stable IDs and timestamps. Derived study artifacts are stored separately from source file records so that history and stale detection remain explicit.
 
 ## Controlled Values
 
@@ -70,15 +65,17 @@ All primary entities use:
 - `multiple_choice`
 - `true_false`
 
-Short-answer is intentionally deferred in Phase 3 and is therefore not represented as an active stored question type.
+Short-answer is intentionally not stored as an active question type because it is still deferred.
 
-## Table: courses
+## Core Workspace Tables
 
-### Purpose
+### `courses`
 
-Organizes the academic workspace by subject or course.
+Purpose:
 
-### Main Fields
+- stores course structure used by files and events
+
+Main fields:
 
 - `id`
 - `name`
@@ -91,18 +88,13 @@ Organizes the academic workspace by subject or course.
 - `updatedAt`
 - `deletedAt`
 
-### Relationships
+### `files`
 
-- one course can be linked to many files
-- one course can be linked to many events
+Purpose:
 
-## Table: files
+- stores local file metadata and current source version information
 
-### Purpose
-
-Stores local file metadata separately from raw blobs and carries source fingerprint data for stale detection.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `name`
@@ -123,27 +115,18 @@ Stores local file metadata separately from raw blobs and carries source fingerpr
 - `updatedAt`
 - `deletedAt`
 
-### Relationships
+Notes:
 
-- many files can belong to one course
-- one file references one local blob record
-- one file can link to many tags through `tagIds`
-- one file can have many extracted-document artifacts
-- one file can have many summaries
-- one file can have many quizzes
+- metadata edits do not invalidate summaries or quizzes
+- source replacement changes `contentFingerprint` and `contentUpdatedAt`
 
-### Notes and Constraints
+### `fileBlobs`
 
-- `contentFingerprint` changes only when the source content changes
-- metadata-only edits must not invalidate summaries or quizzes
+Purpose:
 
-## Table: fileBlobs
+- stores the raw local file payload
 
-### Purpose
-
-Stores the raw file data for offline use.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `fileId`
@@ -152,18 +135,13 @@ Stores the raw file data for offline use.
 - `createdAt`
 - `updatedAt`
 
-### Notes and Constraints
+### `tags`
 
-- large-file support depends on browser IndexedDB quotas
-- metadata queries should avoid loading blobs unless required
+Purpose:
 
-## Table: tags
+- supports optional file tagging
 
-### Purpose
-
-Supports optional tagging for file organization.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `label`
@@ -172,13 +150,13 @@ Supports optional tagging for file organization.
 - `updatedAt`
 - `deletedAt`
 
-## Table: events
+### `events`
 
-### Purpose
+Purpose:
 
-Stores calendar events for classes, deadlines, exams, meetings, and personal planning.
+- stores local calendar events
 
-### Main Fields
+Main fields:
 
 - `id`
 - `title`
@@ -194,18 +172,13 @@ Stores calendar events for classes, deadlines, exams, meetings, and personal pla
 - `updatedAt`
 - `deletedAt`
 
-### Relationships
+### `reminders`
 
-- many events can belong to one course
-- one event can have many reminders
+Purpose:
 
-## Table: reminders
+- stores reminder scheduling for events
 
-### Purpose
-
-Stores reminder scheduling rules for events.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `eventId`
@@ -219,13 +192,13 @@ Stores reminder scheduling rules for events.
 - `updatedAt`
 - `deletedAt`
 
-## Table: notifications
+### `notifications`
 
-### Purpose
+Purpose:
 
-Stores in-app notification records created by the reminder engine.
+- stores in-app notification records
 
-### Main Fields
+Main fields:
 
 - `id`
 - `reminderId`
@@ -238,13 +211,13 @@ Stores in-app notification records created by the reminder engine.
 - `createdAt`
 - `updatedAt`
 
-## Table: settings
+### `settings`
 
-### Purpose
+Purpose:
 
-Stores app-level preferences and capability state.
+- stores local preferences and capability state
 
-### Main Fields
+Main fields:
 
 - `key`
 - `language`
@@ -256,13 +229,15 @@ Stores app-level preferences and capability state.
 - `createdAt`
 - `updatedAt`
 
-## Table: extractedDocuments
+## Phase 2 Document Tables
 
-### Purpose
+### `extractedDocuments`
 
-Stores the result of attempting to extract text from a file for Phase 2 and Phase 3 processing.
+Purpose:
 
-### Main Fields
+- stores extraction attempts and normalized text per file fingerprint
+
+Main fields:
 
 - `id`
 - `fileId`
@@ -278,24 +253,18 @@ Stores the result of attempting to extract text from a file for Phase 2 and Phas
 - `createdAt`
 - `updatedAt`
 
-### Relationships
+Notes:
 
-- many extracted-document records can belong to one file
-- one extracted-document record can be referenced by many summaries and many quizzes created from the same source fingerprint
+- extraction status remains explicit
+- one file can accumulate extraction history across source replacements
 
-### Notes and Constraints
+### `summaries`
 
-- extraction state is explicit and persisted
-- `normalizedText` may be empty when status is `unsupported`, `failed`, or `empty`
-- an extracted-document record is tied to the file fingerprint used when it was created
+Purpose:
 
-## Table: summaries
+- stores summary headers per file, fingerprint, and mode
 
-### Purpose
-
-Stores generated local summary artifacts tied to a file and a specific extracted document version.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `fileId`
@@ -306,25 +275,13 @@ Stores generated local summary artifacts tied to a file and a specific extracted
 - `createdAt`
 - `updatedAt`
 
-### Relationships
+### `summarySections`
 
-- many summaries can belong to one file
-- many summaries can reference one extracted-document artifact
-- one summary can have many summary sections
-- one summary can have many concept artifacts
+Purpose:
 
-### Notes and Constraints
+- stores sectioned summary output separately from the summary header
 
-- summaries are never assumed current unless their `sourceFingerprint` matches the file fingerprint
-- summary history is preserved per file and per mode
-
-## Table: summarySections
-
-### Purpose
-
-Stores sectioned summary output separately from the summary header record.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `summaryId`
@@ -334,18 +291,13 @@ Stores sectioned summary output separately from the summary header record.
 - `createdAt`
 - `updatedAt`
 
-### Notes and Constraints
+### `summaryConcepts`
 
-- `sectionKey` is a stable key rendered through the i18n layer rather than a stored translated heading
-- this allows the UI language to change without rewriting stored artifacts
+Purpose:
 
-## Table: summaryConcepts
+- stores extracted concept artifacts tied to a summary
 
-### Purpose
-
-Stores extracted important terms or concepts associated with a summary.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `summaryId`
@@ -355,18 +307,15 @@ Stores extracted important terms or concepts associated with a summary.
 - `createdAt`
 - `updatedAt`
 
-### Notes and Constraints
+## Phase 3 Quiz Tables
 
-- concept terms must come from the source text
-- scores are heuristic weights used for ordering, not confidence guarantees
+### `quizzes`
 
-## Table: quizzes
+Purpose:
 
-### Purpose
+- stores generated quiz headers per file and fingerprint
 
-Stores generated quiz headers tied to a file and a specific extracted-document fingerprint.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `sourceFileId`
@@ -380,26 +329,13 @@ Stores generated quiz headers tied to a file and a specific extracted-document f
 - `createdAt`
 - `updatedAt`
 
-### Relationships
+### `quizQuestions`
 
-- many quizzes can belong to one file
-- many quizzes can reference one extracted-document artifact
-- one quiz can have many quiz questions
-- one quiz can have many quiz attempts
+Purpose:
 
-### Notes and Constraints
+- stores persisted generated questions
 
-- quizzes are matched against `sourceFingerprint` for stale detection
-- generation options are stored on the quiz so history remains explainable
-- duplicate current quizzes can be avoided by matching file, fingerprint, and generation options
-
-## Table: quizQuestions
-
-### Purpose
-
-Stores persisted generated questions for each quiz.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `quizId`
@@ -414,24 +350,13 @@ Stores persisted generated questions for each quiz.
 - `createdAt`
 - `updatedAt`
 
-### Relationships
+### `quizAttempts`
 
-- many quiz questions belong to one quiz
-- one quiz question can have many quiz answers across attempts
+Purpose:
 
-### Notes and Constraints
+- stores quiz sessions and aggregate results
 
-- `type` is currently limited to `multiple_choice` and `true_false`
-- explanations are persisted so review stays stable even after the generation UI closes
-- `focusTag` keeps track of whether a question was generated from balanced, concept-heavy, or review-oriented logic
-
-## Table: quizAttempts
-
-### Purpose
-
-Stores user quiz-taking sessions and their aggregate results.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `quizId`
@@ -445,24 +370,13 @@ Stores user quiz-taking sessions and their aggregate results.
 - `createdAt`
 - `updatedAt`
 
-### Relationships
+### `quizAnswers`
 
-- many attempts belong to one quiz
-- one attempt can have many quiz answers
+Purpose:
 
-### Notes and Constraints
+- stores per-question answers for an attempt
 
-- an attempt is created when the user starts a quiz
-- aggregate counts are stored for fast history rendering
-- `score` remains `null` until the attempt is submitted
-
-## Table: quizAnswers
-
-### Purpose
-
-Stores per-question answers and correctness for a specific attempt.
-
-### Main Fields
+Main fields:
 
 - `id`
 - `attemptId`
@@ -473,20 +387,35 @@ Stores per-question answers and correctness for a specific attempt.
 - `createdAt`
 - `updatedAt`
 
-### Relationships
+## Relationships
 
-- many answers belong to one attempt
-- many answers can reference the same quiz question across retries
+- one `course` can relate to many `files`
+- one `course` can relate to many `events`
+- one `file` has one active blob record and can have many extracted documents
+- one `file` can have many `summaries`
+- one `file` can have many `quizzes`
+- one `summary` can have many `summarySections` and `summaryConcepts`
+- one `quiz` can have many `quizQuestions`
+- one `quiz` can have many `quizAttempts`
+- one `quizAttempt` can have many `quizAnswers`
+- one `event` can have many `reminders`
+- one `reminder` can lead to many `notifications`
 
-### Notes and Constraints
+## Versioning and Stale Detection
 
-- answers are normalized before evaluation
-- persisted review uses the stored answer rows rather than recalculating from volatile UI state
+The key versioning rule is fingerprint-based, not timestamp-only:
 
-## Future Extension Notes
+- source files carry a `contentFingerprint`
+- summaries store the fingerprint used during generation
+- quizzes store the fingerprint used during generation
+- a summary or quiz becomes stale when its stored fingerprint no longer matches the current file fingerprint
 
-The Phase 3 model is designed so later phases can build on it:
+This keeps metadata-only edits from invalidating derived study artifacts.
 
-- quiz review can reuse source hints and explanations without regenerating questions
-- future study workflows can reference attempt history and stale state
-- export or sync can treat extracted documents, summaries, quizzes, and attempts as additive local artifacts
+## Phase 4 Hardening Note
+
+Phase 4 did not add new entities. It hardened the trustworthiness of the existing model through:
+
+- stronger tests around persistence and stale flows
+- clearer startup and verification paths
+- better docs for the actual schema and relationships

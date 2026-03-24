@@ -2,109 +2,159 @@
 
 ## Current Repository State
 
-This repository targets an offline-first application with:
+Student Assistant Hub is a fully local web application with Phases 1 through 4 implemented.
 
-- Phase 1 local workspace features implemented
-- Phase 2 local document extraction and summarization implemented for supported formats
-- Phase 3 local quiz generation, execution, scoring, review, and history implemented on top of Phase 2 artifacts
+The repository includes:
 
-The application does not require any backend service, cloud storage, or remote inference provider to run.
+- the offline-first workspace
+- local extraction and summarization
+- local quiz generation and review
+- startup scripts
+- verify tooling
+- coverage reporting
+- hardened responsive and bilingual UI
 
-## Required Tools
+## Requirements
 
 - Node.js 20 or newer
 - npm 10 or newer
-- a modern Chromium-based browser, Firefox, or Safari with IndexedDB support
-- Playwright browsers for end-to-end tests, if running the E2E suite
+- a modern browser with IndexedDB support
 
-If Playwright browsers are not installed yet, run:
+For e2e tests:
 
 ```bash
 npx playwright install
 ```
 
-## Local Setup
+## Fastest Run Paths
 
-1. Install dependencies:
+### Windows double-click
 
-   ```bash
-   npm install
-   ```
+- `RUN_ME_WINDOWS.bat`
 
-2. Start the development server:
+### Windows PowerShell
 
-   ```bash
-   npm run dev
-   ```
-
-3. Open the local app in your browser.
-
-The workspace stores application data in IndexedDB. No backend or extra local service is required.
-
-## Test Commands
-
-Unit and component tests:
-
-```bash
-npm run test
+```powershell
+./RUN_ME_WINDOWS.ps1
 ```
 
-Linting:
+### Unix-like shell
 
 ```bash
-npm run lint
+chmod +x RUN_ME_UNIX.sh STOP_UNIX.sh
+./RUN_ME_UNIX.sh
 ```
 
-End-to-end tests:
+Stop commands:
+
+```powershell
+./STOP_WINDOWS.ps1
+```
 
 ```bash
-npm run test:e2e
+./STOP_UNIX.sh
 ```
 
-Production build:
+## Standard npm Workflow
 
 ```bash
-npm run build
+npm install
+npx playwright install
+npm run dev
 ```
+
+## Verification Commands
+
+### Main verification
+
+```bash
+npm run verify
+```
+
+This runs:
+
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+
+### Full verification
+
+```bash
+npm run verify:full
+```
+
+This runs:
+
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+- `npm run test:e2e`
+
+### Coverage
+
+```bash
+npm run coverage
+```
+
+Coverage output is written under `coverage/`.
+
+Current global thresholds:
+
+- lines: `72`
+- statements: `72`
+- functions: `72`
+- branches: `62`
+
+## What the Startup Scripts Do
+
+The startup scripts are intentionally simple. They:
+
+- check Node.js
+- check npm
+- install dependencies if `node_modules` is missing
+- detect an obvious port-3000 conflict
+- start the Next.js dev server
+- open the browser where practical
+- store a PID file for the matching stop script
+
+The Windows scripts also write local dev logs beside the project root.
 
 ## Environment Variables
 
-The application remains backend-free in Phase 3.
+The app remains backend-free. No environment file is required for normal local development.
 
-The `.env.example` file remains intentionally minimal and exists only for optional display-level configuration. The app should run without any custom environment file.
+`.env.example` remains intentionally minimal and optional.
 
 ## Offline-First Expectations
 
-- all primary application data is stored in IndexedDB
-- extracted text, summaries, quizzes, attempts, and answers are also stored locally
-- the app remains usable without cloud services
-- browser storage quotas still apply
-- clearing site data removes the local workspace and all derived study artifacts
+- all primary product data is stored in IndexedDB
+- extracted text, summaries, quizzes, attempts, and answers are also local
+- clearing site data removes the local workspace
+- browser quota still applies
 
-## Document Processing Limits
+## Supported Study Inputs
 
-- summarization and quiz generation only support plain text, markdown, and text-based PDFs
-- scanned or image-only PDFs are not treated as supported study inputs
-- extraction quality depends on the structure embedded in the source file
-- local summaries and quizzes are heuristic and deterministic, not cloud-model reasoning
+Supported:
 
-## Quiz Workflow Limits
+- plain text files
+- markdown files
+- text-based PDFs
 
-- quizzes are generated from one supported file at a time
-- current question types are multiple-choice and true/false
-- short-answer is intentionally deferred because the current local-only evaluation model is not strong enough to claim robust grading
-- quizzes are only as current as the source fingerprint they were generated from
+Not supported:
 
-## Notifications
+- scanned or image-only PDFs
+- OCR-dependent inputs
+- audio or video
+- essay-style grading
 
-Browser notifications are optional and depend on:
+## Notification Limits
 
-- user permission
-- browser support
-- the app being able to execute reminder checks
+Browser notifications are optional and honest:
 
-They are helpful but not guaranteed like native background notifications.
+- they depend on permission
+- they depend on browser support
+- they are not guaranteed when the browser is closed or heavily suspended
 
-## Future Deployment Direction
+## Notes on Unix Script Verification
 
-The app can be deployed like a normal Next.js application later, but it does not depend on any hosted backend. The main persistence boundary remains local Dexie repositories and all Phase 2 and Phase 3 artifacts are stored locally beside existing workspace data.
+The Unix run path is provided and documented for shell-based environments. In this Windows-heavy development environment, the PowerShell and batch paths were directly exercised, while the Unix scripts were validated by inspection and kept aligned with the same direct `node ... next dev` startup approach.

@@ -15,10 +15,10 @@ import { useI18n } from "@/lib/providers/i18n-provider";
 import { courseRepository, eventRepository, fileRepository, notificationRepository, reminderRepository } from "@/lib/repositories";
 import { buildDashboardSnapshot } from "@/lib/services/dashboard-service";
 import { getReminderDisplayState } from "@/lib/services/reminder-engine";
-import { formatBytes } from "@/lib/utils";
+import { formatBytes, formatLocalizedDateTime } from "@/lib/utils";
 
 export function DashboardPageClient() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const courses = useLiveQuery(() => courseRepository.list(), [], undefined);
   const files = useLiveQuery(() => fileRepository.list(), [], undefined);
   const events = useLiveQuery(() => eventRepository.list(), [], undefined);
@@ -105,7 +105,7 @@ export function DashboardPageClient() {
                     </div>
                     <div>
                       <p className="font-medium text-slate-900">{file.name}</p>
-                      <p className="text-xs text-slate-500">{new Date(file.importedAt).toLocaleString()}</p>
+                      <p className="text-xs text-slate-500">{formatLocalizedDateTime(file.importedAt, locale)}</p>
                     </div>
                   </div>
                   <Badge variant="muted">{formatBytes(file.sizeBytes)}</Badge>
@@ -166,7 +166,7 @@ export function DashboardPageClient() {
                     <Clock3 className="h-4 w-4 text-red-600" />
                     <p className="font-medium text-slate-900">{event.title}</p>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">{new Date(event.startsAt).toLocaleString()}</p>
+                  <p className="mt-1 text-sm text-slate-600">{formatLocalizedDateTime(event.startsAt, locale)}</p>
                 </div>
               ))
             )}
@@ -187,7 +187,7 @@ export function DashboardPageClient() {
                     <AlarmClockCheck className="h-4 w-4 text-violet-600" />
                     <p className="font-medium text-slate-900">{event.title}</p>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">{new Date(event.startsAt).toLocaleString()}</p>
+                  <p className="mt-1 text-sm text-slate-600">{formatLocalizedDateTime(event.startsAt, locale)}</p>
                 </div>
               ))
             )}
@@ -205,7 +205,7 @@ export function DashboardPageClient() {
               snapshot.upcomingReminders.map((reminder) => (
                 <div key={reminder.id} className="rounded-2xl border border-slate-200 p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium text-slate-900">{new Date(reminder.snoozedUntil || reminder.scheduledFor).toLocaleString()}</p>
+                    <p className="font-medium text-slate-900">{formatLocalizedDateTime(reminder.snoozedUntil || reminder.scheduledFor, locale)}</p>
                     <Badge variant={getReminderDisplayState(reminder) === "overdue" ? "danger" : "muted"}>
                       {t(`reminders.states.${getReminderDisplayState(reminder)}`)}
                     </Badge>
@@ -228,7 +228,7 @@ export function DashboardPageClient() {
             snapshot.eventsThisWeek.map((event) => (
               <div key={event.id} className="rounded-2xl border border-slate-200 p-3">
                 <p className="font-medium text-slate-900">{event.title}</p>
-                <p className="mt-1 text-sm text-slate-600">{new Date(event.startsAt).toLocaleString()}</p>
+                <p className="mt-1 text-sm text-slate-600">{formatLocalizedDateTime(event.startsAt, locale)}</p>
               </div>
             ))
           )}

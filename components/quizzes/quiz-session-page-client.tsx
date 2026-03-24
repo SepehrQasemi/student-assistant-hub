@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useI18n } from "@/lib/providers/i18n-provider";
 import { documentQuizService } from "@/lib/services/document-quiz-service";
 import { quizReviewService } from "@/lib/services/quiz-review-service";
+import { formatLocalizedDateTime } from "@/lib/utils";
 
 type QuizView = Awaited<ReturnType<typeof quizReviewService.getQuizView>>;
 type AttemptReview = Awaited<ReturnType<typeof quizReviewService.getAttemptReview>>;
@@ -31,7 +32,7 @@ function formatAnswerLabel(value: string, localeKey: (key: string) => string) {
 export function QuizSessionPageClient({ quizId }: { quizId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const attemptId = searchParams.get("attempt");
 
   const [quizView, setQuizView] = useState<QuizView | undefined>(undefined);
@@ -193,7 +194,7 @@ export function QuizSessionPageClient({ quizId }: { quizId: string }) {
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-4 2xl:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
             {attemptReview.questions.map(({ question, answer }, index) => (
               <Card key={question.id}>
@@ -235,7 +236,7 @@ export function QuizSessionPageClient({ quizId }: { quizId: string }) {
               {quizView.attempts.map((attempt) => (
                 <Button key={attempt.id} asChild variant={attempt.id === attemptReview.attempt.id ? "default" : "secondary"} className="w-full justify-between">
                   <Link href={`/quizzes/${quizId}?attempt=${attempt.id}`}>
-                    <span>{new Date(attempt.startedAt).toLocaleString()}</span>
+                    <span>{formatLocalizedDateTime(attempt.startedAt, locale)}</span>
                     <span>{t("quizzes.scoreValue", { score: attempt.score?.toFixed(0) ?? "0" })}</span>
                   </Link>
                 </Button>

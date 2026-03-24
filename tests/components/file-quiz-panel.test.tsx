@@ -55,7 +55,7 @@ describe("FileQuizPanel", () => {
     await waitFor(() => {
       expect(screen.getByText("Quiz history")).toBeInTheDocument();
       expect(screen.getAllByText("Current quiz").length).toBeGreaterThan(0);
-      expect(screen.getByRole("link", { name: "Start quiz" })).toBeInTheDocument();
+      expect(screen.getByText("distributed-systems quiz")).toBeInTheDocument();
     });
   });
 
@@ -88,7 +88,7 @@ describe("FileQuizPanel", () => {
     await user.click(screen.getByRole("button", { name: "Generate quiz" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Current quiz")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Start quiz" })).toBeInTheDocument();
     });
 
     await act(async () => {
@@ -114,7 +114,7 @@ describe("FileQuizPanel", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Quiz")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Generer un quiz" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Générer un quiz" })).toBeInTheDocument();
     });
   });
 });

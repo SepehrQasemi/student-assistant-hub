@@ -5,7 +5,9 @@ export default defineConfig({
   timeout: 60_000,
   use: {
     baseURL: "http://127.0.0.1:3000",
+    screenshot: "only-on-failure",
     trace: "retain-on-failure",
+    video: "retain-on-failure",
   },
   webServer: {
     command: "npm run dev -- --hostname 127.0.0.1 --port 3000",

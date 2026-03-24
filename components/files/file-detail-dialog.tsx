@@ -28,7 +28,7 @@ import { useObjectUrl } from "@/lib/hooks/use-object-url";
 import { useI18n } from "@/lib/providers/i18n-provider";
 import { fileRepository, tagRepository } from "@/lib/repositories";
 import { createFileMetadataSchema } from "@/lib/validation/file-metadata";
-import { formatBytes } from "@/lib/utils";
+import { formatBytes, formatLocalizedDateTime } from "@/lib/utils";
 import type { Course, FileTag, StoredFileRecord } from "@/types/entities";
 
 export function FileDetailDialog({
@@ -44,7 +44,7 @@ export function FileDetailDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [isSaving, setIsSaving] = useState(false);
   const [isReplacingSource, setIsReplacingSource] = useState(false);
   const [replacementFile, setReplacementFile] = useState<File | null>(null);
@@ -141,7 +141,7 @@ export function FileDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(96vw,1100px)]">
+      <DialogContent className="w-[min(96vw,1100px)] p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{t("files.fileDetails")}</DialogTitle>
           <DialogDescription>{effectiveFile?.originalName}</DialogDescription>
@@ -156,7 +156,7 @@ export function FileDetailDialog({
             </TabsList>
 
             <TabsContent value="details" className="space-y-4">
-              <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
                 <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="accent">{t(`categories.${effectiveFile.category}`)}</Badge>
@@ -164,14 +164,14 @@ export function FileDetailDialog({
                     <Badge variant="muted">{formatBytes(effectiveFile.sizeBytes)}</Badge>
                   </div>
                   {effectiveFile.previewKind === "pdf" && objectUrl ? (
-                    <iframe title={effectiveFile.name} src={objectUrl} className="min-h-[440px] w-full rounded-[20px] border border-slate-200 bg-white" />
+                    <iframe title={effectiveFile.name} src={objectUrl} className="min-h-[320px] w-full rounded-[20px] border border-slate-200 bg-white md:min-h-[440px]" />
                   ) : null}
                   {effectiveFile.previewKind === "image" && objectUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={objectUrl} alt={effectiveFile.name} className="max-h-[480px] w-full rounded-[20px] border border-slate-200 object-contain bg-white" />
+                    <img src={objectUrl} alt={effectiveFile.name} className="max-h-[320px] w-full rounded-[20px] border border-slate-200 bg-white object-contain md:max-h-[480px]" />
                   ) : null}
                   {effectiveFile.previewKind === "text" ? (
-                    <pre className="max-h-[480px] overflow-auto rounded-[20px] border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                    <pre className="max-h-[320px] overflow-auto rounded-[20px] border border-slate-200 bg-white p-4 text-sm text-slate-700 md:max-h-[480px]">
                       {textPreview}
                     </pre>
                   ) : null}
@@ -239,8 +239,8 @@ export function FileDetailDialog({
                     <CardContent className="space-y-3 p-4">
                       <div className="space-y-1 text-sm text-slate-600">
                         <p>{t("files.fileType")}: {effectiveFile.mimeType}</p>
-                        <p>{t("files.importedOn")}: {new Date(effectiveFile.importedAt).toLocaleString()}</p>
-                        <p>{t("summaries.lastSourceChange")}: {new Date(effectiveFile.contentUpdatedAt).toLocaleString()}</p>
+                        <p>{t("files.importedOn")}: {formatLocalizedDateTime(effectiveFile.importedAt, locale)}</p>
+                        <p>{t("summaries.lastSourceChange")}: {formatLocalizedDateTime(effectiveFile.contentUpdatedAt, locale)}</p>
                       </div>
                     </CardContent>
                   </Card>

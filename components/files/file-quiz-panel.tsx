@@ -14,6 +14,7 @@ import { extractedDocumentRepository } from "@/lib/repositories";
 import { useI18n } from "@/lib/providers/i18n-provider";
 import { documentQuizService } from "@/lib/services/document-quiz-service";
 import { quizReviewService } from "@/lib/services/quiz-review-service";
+import { formatLocalizedDateTime } from "@/lib/utils";
 import type { QuizGenerationOptions, StoredFileRecord } from "@/types/entities";
 
 const defaultOptions: QuizGenerationOptions = {
@@ -28,7 +29,7 @@ function formatScore(score: number | null) {
 }
 
 export function FileQuizPanel({ file }: { file: StoredFileRecord }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [options, setOptions] = useState<QuizGenerationOptions>(defaultOptions);
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
   const [generationState, setGenerationState] = useState<
@@ -110,9 +111,11 @@ export function FileQuizPanel({ file }: { file: StoredFileRecord }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={quizView?.stale ? "danger" : "accent"}>
-              {quizView?.stale ? t("quizzes.staleBadge") : t("quizzes.currentBadge")}
-            </Badge>
+            {quizView ? (
+              <Badge variant={quizView.stale ? "danger" : "accent"}>
+                {quizView.stale ? t("quizzes.staleBadge") : t("quizzes.currentBadge")}
+              </Badge>
+            ) : null}
             {currentExtraction ? <Badge variant="muted">{t(`summaries.documentTypes.${currentExtraction.documentType}`)}</Badge> : null}
           </div>
           <p className="text-sm text-slate-600">{renderStatusMessage()}</p>
@@ -168,7 +171,7 @@ export function FileQuizPanel({ file }: { file: StoredFileRecord }) {
               </Select>
             </div>
 
-            <div className="flex items-end justify-between rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <div className="flex flex-col gap-3 rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-slate-900">{t("quizzes.options.includeExplanations")}</p>
                 <p className="text-sm text-slate-600">{t("quizzes.options.includeExplanationsHelp")}</p>
@@ -181,7 +184,7 @@ export function FileQuizPanel({ file }: { file: StoredFileRecord }) {
             <Button onClick={() => void handleGenerate()} disabled={generationState === "generating"}>
               {generationState === "generating" ? t("quizzes.generating") : t("quizzes.generateAction")}
             </Button>
-            <Badge variant="muted">{t("quizzes.shortAnswerDeferred")}</Badge>
+            <p className="max-w-2xl text-sm text-slate-600">{t("quizzes.shortAnswerDeferred")}</p>
           </div>
         </CardContent>
       </Card>
@@ -229,7 +232,7 @@ export function FileQuizPanel({ file }: { file: StoredFileRecord }) {
             <CardDescription>{t("quizzes.viewerDescription")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!selectedQuizId || !quizView ? (
+            {!resolvedSelectedQuizId || !quizView ? (
               <p className="text-sm text-slate-600">{t("quizzes.viewerEmpty")}</p>
             ) : (
               <>
@@ -265,7 +268,7 @@ export function FileQuizPanel({ file }: { file: StoredFileRecord }) {
                       {quizView.attempts.slice(0, 4).map((attempt) => (
                         <Button key={attempt.id} asChild variant="secondary" className="w-full justify-between">
                           <Link href={`/quizzes/${quizView.quiz.id}?attempt=${attempt.id}`}>
-                            <span>{new Date(attempt.startedAt).toLocaleString()}</span>
+                            <span>{formatLocalizedDateTime(attempt.startedAt, locale)}</span>
                             <span>{t("quizzes.latestScore", { score: formatScore(attempt.score) })}</span>
                           </Link>
                         </Button>

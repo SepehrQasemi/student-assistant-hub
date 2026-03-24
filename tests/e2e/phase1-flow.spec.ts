@@ -79,9 +79,9 @@ test("completes the offline-first Phase 1 workflow", async ({ page }) => {
 
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
-  await expect(page.getByText("Fichiers recents")).toBeVisible();
+  await expect(page.getByText("Fichiers récents")).toBeVisible();
   await expect(page.getByText("exam-topics").first()).toBeVisible();
   await expect(page.getByText("Distributed Systems Midterm").first()).toBeVisible();
-  await expect(page.getByText("Rappels a venir")).toBeVisible();
+  await expect(page.getByText("Rappels à venir")).toBeVisible();
   await expect(page.getByText("Aucun rappel pour le moment")).not.toBeVisible();
 });

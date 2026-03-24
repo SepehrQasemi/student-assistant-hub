@@ -2,155 +2,150 @@
 
 ## Product Overview
 
-Student Assistant Hub is an offline-first student workspace for organizing academic life locally in the browser. It helps students manage courses, files, deadlines, exams, reminders, summaries, and study quizzes without relying on a backend service.
+Student Assistant Hub is an offline-first student workspace for managing academic organization and study workflows locally in the browser.
 
-Phase 3 extends the existing local workspace and document-understanding layers with local quiz generation, quiz-taking, scoring, review, history, and stale detection. It does not introduce remote AI, cloud inference, or online sync.
+The current product combines:
+
+- local course management
+- local file management
+- calendar and reminders
+- deterministic local summaries
+- deterministic local quizzes
+
+It does this without introducing a backend, cloud sync, remote inference, or paid APIs.
 
 ## Problem Statement
 
-Students do not just need storage and summaries. They also need active recall.
+Students usually split their academic workflow across multiple disconnected tools:
 
-After Phase 1 and Phase 2, the workspace already solves organization and document recap problems. The next problem is study execution:
+- folders for files
+- calendars for deadlines
+- reminder apps for follow-up
+- note apps for summaries
+- quiz tools for self-testing
 
-- students want to test themselves against course material quickly
-- generic online quiz tools break file context and privacy expectations
-- cloud quiz generation may be undesirable because of privacy, cost, or offline use
-- review needs to stay linked to the exact file version that produced the questions
-
-Phase 3 solves this by adding a realistic, local quiz workflow that is derived from already extracted file content and persisted locally for reuse.
+That fragmentation causes context loss and weakens trust. Student Assistant Hub solves this by keeping the organization, document understanding, and study loop attached to the same local file records and the same offline-first persistence model.
 
 ## Target Users
 
 Primary users:
 
-- students managing several courses and many academic files
-- students who want private, local-first study tooling
-- students preparing for exams with repeated self-testing
+- students handling multiple courses and many study files
+- students who want privacy-friendly local study tooling
+- students working across English and French UI contexts
 
 Secondary users:
 
-- students revisiting summary artifacts before starting a quiz
-- students working in mixed English/French environments
+- users who want to revisit prior summaries and quiz attempts later
+- users who prefer deterministic local processing over remote AI services
 
-## Primary Use Cases
+## Implemented Product Scope
 
-- open a supported file from the offline file workspace
-- generate a quiz from that file using local Phase 2 artifacts
-- choose quiz options such as question count, mode, focus, and explanations
-- complete the quiz inside the app
-- receive a score and per-question review
-- revisit prior quizzes and attempts later
-- detect whether a stored quiz is stale after the source file changes
+### Phase 1
 
-## Phase 1 Scope
-
-Phase 1 includes:
-
-- bilingual application UI with English and French dictionaries
-- local persistence through IndexedDB
-- course CRUD
-- offline file manager with local blob storage and realistic previews
+- bilingual English and French UI
+- Dexie-backed IndexedDB persistence
+- courses CRUD
+- offline file manager with previews, filters, notes, tags, and course linkage
 - calendar with day, week, month, quarter, and agenda views
-- reminders and notification center
-- dashboard with useful summaries
-- settings for language, notification preferences, and local app behavior
-- automated tests and responsive UX
+- reminders and in-app notification center
+- dashboard
+- settings
 
-## Phase 2 Scope
+### Phase 2
 
-Phase 2 includes:
-
-- supported file type detection for summarization
-- local extraction for plain text, markdown, and text-based PDFs
-- extraction state persistence
+- document type detection
+- extraction for plain text, markdown, and text-based PDFs
+- extraction status persistence
 - text normalization
-- deterministic chunking for long documents
-- local summarization modes:
-  - `quick_summary`
-  - `structured_summary`
-  - `study_notes`
-  - `key_concepts`
-- key concept extraction and persistence
-- summary history by file
-- stale summary detection using source fingerprints
-- bilingual UI coverage for all new Phase 2 states and actions
+- deterministic chunking
+- deterministic summaries
+- key concept extraction
+- summary history
+- stale summary detection
 
-## Phase 3 Scope
+### Phase 3
 
-Phase 3 includes:
-
-- quiz generation from one supported source file at a time
-- reuse of extracted text, summaries, chunk structure, and concept artifacts
-- deterministic local question generation
-- multiple-choice questions
-- true/false questions
-- quiz option controls:
-  - question count
-  - mode
-  - focus mode
-  - include explanations
+- quiz generation from one supported file at a time
+- deterministic multiple-choice and true/false generation
+- quiz options for count, mode, focus mode, and explanations
 - quiz persistence
 - question persistence
 - attempt and answer persistence
 - scoring and results review
-- attempt history and retry flow
-- stale quiz detection using source fingerprints
-- bilingual UI coverage for all new Phase 3 states and actions
-- automated tests for quiz generation, persistence, review, and stale detection
+- quiz history and attempt history
+- stale quiz detection
 
-## Out of Scope for Phase 3
+### Phase 4
 
-Phase 3 does not include:
+- documentation audit and cleanup
+- easier local startup paths
+- explicit verify tooling
+- stronger coverage instrumentation
+- wider unit, integration, component, and e2e coverage
+- responsive audit and targeted fixes
+- bilingual English/French audit and cleanup
+- French spelling and layout-pressure cleanup
 
-- OpenAI APIs or any remote inference service
+## Primary Use Cases
+
+- import and organize files locally
+- connect files, courses, events, and reminders
+- generate summaries for supported files
+- generate quizzes for supported files
+- complete quizzes and review results
+- revisit prior summaries and attempts later
+- detect when study artifacts are stale after a file source changes
+- run and verify the project locally with a clear startup path
+
+## Out of Scope
+
+The current product intentionally does not include:
+
 - cloud sync
-- OCR for scanned or image-only PDFs
+- remote AI services
+- OCR for scanned PDFs
 - chat with documents
 - flashcards
 - spaced repetition
-- adaptive tutoring
-- multi-file quiz generation
-- teacher authoring tools
 - essay grading
-- short-answer grading
+- multi-file reasoning
+- collaboration features
 
-Short-answer is intentionally deferred rather than being shipped with weak local evaluation.
+Short-answer grading is intentionally deferred instead of being shipped with weak or misleading evaluation.
 
-## Success Criteria for Phase 3
+## Success Criteria
 
-Phase 3 is successful when a student can:
+The current product state is successful when a user can:
 
-- choose a supported file from the file manager
-- generate a quiz using deterministic local logic
-- select between multiple-choice, true/false, or mixed modes
-- complete the quiz inside the app
-- see score, correct and incorrect counts, answers, and explanations
-- reopen older quizzes and attempts later
-- clearly see when a stored quiz is outdated because the source file changed
-- switch the UI between English and French without leaving Phase 3 strings untranslated
+- run the app locally without ambiguous setup
+- use the workspace entirely without a backend
+- switch between English and French without missing major translations
+- organize study files, summaries, quizzes, events, reminders, and settings in one local workspace
+- trust that summaries and quizzes stay tied to the correct file fingerprint
+- run lint, tests, build, and e2e verification through documented commands
 
 Engineering-level success criteria:
 
-- quiz logic lives outside page and feature components
-- persistence is routed through repositories
-- quiz generation reuses Phase 2 artifacts instead of reparsing files through a parallel path
-- file fingerprint comparison is deterministic and tested
-- unsupported, missing, and insufficient-content states are explicit
-- question generation stays grounded in the source file content
+- page components do not contain repository or generation logic
+- persistence stays behind repositories
+- critical workflows have meaningful automated coverage
+- responsive layouts remain usable across major viewport classes
+- docs match the implementation rather than an aspirational future state
 
 ## Constraints and Assumptions
 
 ### Constraints
 
-- the product must remain offline-first and local-only
-- the implementation must remain honest about extraction, browser, and quiz-quality limitations
-- user-facing strings must continue to flow through the existing i18n layer
-- the file manager remains the central product surface for quiz generation entry
+- the app must remain offline-first and local-first
+- browser storage quotas still apply
+- browser notification delivery remains best-effort
+- extraction and preview support must stay honest about browser/runtime limits
+- startup and verification flows must remain simple enough for a local student project workflow
 
 ### Assumptions
 
-- the app is still used by one person per browser profile
-- local data can still be lost if the user clears site storage
-- PDF extraction quality depends on text actually being embedded in the PDF
-- quiz quality is deterministic and heuristic, not equivalent to large-model reasoning
-- future study workflows should consume persisted quiz artifacts rather than rebuilding the same questions repeatedly
+- one user works inside one browser profile
+- clearing browser site data removes the local workspace
+- text-based PDF support depends on actual embedded text
+- deterministic summaries and quizzes are sufficient for local study support even though they are not LLM reasoning

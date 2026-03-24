@@ -1,177 +1,195 @@
-# Architecture Direction
+# Architecture
 
-## Primary Architecture
+## Core Direction
 
-Student Assistant Hub remains a fully local, offline-first web application. It runs entirely in the browser and stores primary data in IndexedDB through Dexie.
+Student Assistant Hub is a fully local, offline-first web application. The app runs in the browser, stores its primary data in IndexedDB through Dexie, and keeps product logic behind repository and service boundaries.
 
-There is still no backend in Phase 3.
+There is still no backend in the current product state.
 
 ## Main Libraries
 
-- Next.js App Router for routing and UI composition
-- TypeScript for typed domain and persistence contracts
-- Tailwind CSS for styling
-- shadcn/ui-style component architecture for reusable UI primitives
-- Dexie for IndexedDB access and schema versioning
-- React Hook Form + Zod for forms and validation
-- FullCalendar for calendar rendering across required views
-- Notifications API for browser-level notifications where supported
-- `pdfjs-dist` for local text extraction from text-based PDFs
-- Vitest and Testing Library for automated tests
-- Playwright for end-to-end coverage where feasible
+- Next.js App Router
+- TypeScript
+- Tailwind CSS
+- shadcn/ui-style component structure
+- Dexie
+- React Hook Form + Zod
+- FullCalendar
+- `pdfjs-dist`
+- Vitest + Testing Library
+- Playwright
 
-Phase 3 does not add a new external quiz-generation dependency. It reuses the existing Phase 2 pipeline and adds deterministic local services for question generation and review.
+Phase 4 did not add a new product-domain dependency. It added startup and verification tooling around the existing application.
 
 ## Architectural Layers
 
-### UI / Pages / Components
+### UI Layer
 
 Responsibilities:
 
-- page layout and route composition
-- feature presentation
-- form interaction
-- empty, loading, success, and error states
-- responsive behavior
+- route composition
+- page layout
+- dialogs, tabs, cards, and forms
+- loading, empty, error, and stale states
+- responsive rendering
 
 Rules:
 
-- UI must not directly read or write IndexedDB
-- UI must not contain extraction, summary, or quiz-generation logic beyond orchestration calls
-- user-facing text must go through the i18n layer
+- do not access IndexedDB directly
+- do not implement document-processing, summary, quiz, reminder, or scoring logic inside components
+- source user-facing text from the i18n layer
 
-### Application Logic / Services
+### Application / Service Layer
 
 Responsibilities:
 
-- feature orchestration
+- file filtering and sorting
 - dashboard aggregation
-- file filtering and sorting rules
-- reminder scheduling logic
-- notification workflows
-- document ingestion and extraction workflows
-- normalization, chunking, summarization, and concept extraction
-- quiz source selection
-- question candidate selection
-- deterministic question generation
-- answer normalization and quiz evaluation
-- stale summary and stale quiz evaluation
+- event filtering
+- reminder scheduling
+- notification dispatch
+- document ingestion and extraction
+- normalization and chunking
+- summarization and concept extraction
+- quiz source selection, generation, evaluation, and review
+- stale detection
 
 ### Repository Layer
 
 Responsibilities:
 
-- CRUD access to courses, files, tags, events, reminders, notifications, settings, extracted documents, summaries, summary sections, summary concepts, quizzes, quiz questions, quiz attempts, and quiz answers
-- ownership of persistence-specific details
-- stable interfaces for future sync or export adapters
+- CRUD and query access for all persisted entities
+- Dexie-specific coordination
+- preserving a stable persistence boundary for later export or sync work
 
 ### Local Persistence Layer
 
 Responsibilities:
 
-- Dexie database definition
-- schema versioning and migrations
-- table initialization
-- IndexedDB access utilities
+- Dexie schema definitions
+- version upgrades
+- table declarations
+- local defaults
 
 ### i18n Layer
 
 Responsibilities:
 
-- locale dictionaries
-- translation lookup
+- English and French dictionaries
 - runtime locale switching
-- persistence of the selected language
-- localization of Phase 2 and Phase 3 states, labels, warnings, and review UI
+- persisted locale preference
+- safe translation fallback behavior
 
-### Reminder Scheduling / Notification Engine
+### Tooling / Verification Layer
 
-Responsibilities:
+Phase 4 hardened the project around:
 
-- evaluating due reminders
-- creating in-app notifications
-- requesting browser notification permission
-- sending browser notifications only when supported and allowed
-
-### Document Ingestion / Extraction Layer
-
-Responsibilities:
-
-- supported-file detection
-- extraction-strategy selection
-- text extraction from local blobs
-- extraction status tracking
-- persistence of raw and normalized text
-
-### Summarization Layer
-
-Responsibilities:
-
-- deterministic chunking for long documents
-- sentence and paragraph scoring
-- section-aware summary generation
-- key concept extraction
-- summary and concept persistence orchestration
-- stale summary detection using file fingerprints
-
-### Quiz Generation Layer
-
-Responsibilities:
-
-- choosing the strongest quiz source material from extracted documents and summary artifacts
-- selecting candidate facts, definitions, and concept statements
-- generating multiple-choice and true/false questions deterministically
-- generating plausible distractors for MCQs
-- attaching explanations and source hints where appropriate
-- refusing generation when extracted content is missing, unsupported, or too weak
-
-### Scoring / Review Layer
-
-Responsibilities:
-
-- starting attempts
-- normalizing and evaluating answers
-- calculating correct counts, incorrect counts, and score percentages
-- retrieving review data for attempts
-- exposing quiz history and stale quiz state
+- startup scripts for Windows and Unix-like shells
+- `scripts/verify.mjs` for repeatable verification
+- coverage instrumentation through Vitest
+- Playwright failure artifacts for debugging real browser regressions
 
 ## High-Level Data Flow
 
-1. A user opens a file and triggers quiz generation from the file workflow.
-2. The UI calls a document-quiz service rather than touching Dexie directly.
-3. The quiz source service loads current extracted content and supporting summary artifacts for the same file fingerprint.
-4. Candidate selection chooses strong concepts and definition-like statements from the source material.
-5. The quiz generator builds deterministic multiple-choice or true/false questions and explanations.
-6. Repositories store the quiz header and question rows.
-7. A dedicated quiz route runs attempts, stores answers, calculates scores, and renders review history.
-8. The quiz review service compares quiz fingerprints against the current file fingerprint to mark stale quizzes honestly.
+### Workspace Flow
 
-## Local-First Design Principles
+1. UI components trigger feature actions.
+2. Repositories handle persistence.
+3. Services aggregate or derive higher-level product behavior.
+4. UI re-renders through live queries and local state.
 
-- store source files, extracted text, summaries, quizzes, and attempts as separate additive artifacts
-- keep entity IDs stable using `crypto.randomUUID()`
-- use file-content fingerprints rather than UI assumptions for stale detection
-- isolate browser APIs and format-specific parsing behind services
-- keep generation and evaluation deterministic enough for repeatable testing
+### Summary Flow
 
-## Phase Reuse Strategy
+1. A file is selected from the file workspace.
+2. The ingestion service resolves file type and extraction strategy.
+3. Extracted text is normalized and chunked.
+4. The summarization service produces deterministic summary artifacts.
+5. Repositories persist extracted documents, summaries, sections, and concepts.
 
-Phase 3 reuses, not replaces, the Phase 2 foundation:
+### Quiz Flow
 
-- extracted text remains the canonical local source material
-- chunking and concept extraction remain reusable across later features
-- summary sections and concepts help quiz candidate selection
-- quiz history is tied to the same file fingerprint model used for stale summaries
+1. A supported file is selected from the file workspace.
+2. Quiz services load the current extracted document plus summary artifacts for the same fingerprint.
+3. Candidate services select useful source material.
+4. Question generation produces deterministic multiple-choice and true/false questions.
+5. Quiz repositories persist the quiz, questions, attempts, and answers.
+6. Review services expose score, explanations, history, and stale state.
 
-Phase 4 should build on persisted quiz artifacts, attempt history, and review signals rather than bypassing them.
+## Persistence Strategy
 
-## Browser Limitation Policy
+Core persisted domains:
 
-The implementation remains honest:
+- courses
+- files and file blobs
+- tags
+- events
+- reminders
+- notifications
+- settings
+- extracted documents
+- summaries, sections, concepts
+- quizzes, questions, attempts, answers
 
-- IndexedDB availability depends on the browser context
-- notification delivery cannot be guaranteed when the app is not running
-- PDF extraction only supports text-based PDFs
-- scanned or image-only PDFs are reported as unsupported study inputs
-- quizzes are heuristic and deterministic, not cloud-model reasoning
-- short-answer grading is deferred instead of being faked
+Key persistence principles:
+
+- stable local-safe identifiers
+- timestamps on persisted entities
+- additive derived artifacts instead of destructive overwrites
+- file fingerprint tracking for stale summary and stale quiz detection
+
+## Phase 4 Hardening Decisions
+
+### Startup
+
+The project now exposes explicit local run scripts:
+
+- `RUN_ME_WINDOWS.bat`
+- `RUN_ME_WINDOWS.ps1`
+- `RUN_ME_UNIX.sh`
+- `STOP_WINDOWS.ps1`
+- `STOP_UNIX.sh`
+
+These scripts:
+
+- check Node and npm availability
+- check dependencies
+- detect busy-port conditions
+- launch the dev server
+- store a PID for stop flows
+
+### Verification
+
+The project now exposes:
+
+- `npm run verify`
+- `npm run verify:full`
+- `npm run coverage`
+
+This keeps the main verification path short and repeatable while leaving e2e optional in the default verify flow.
+
+### Responsive Behavior
+
+Phase 4 focused on practical responsive hardening rather than introducing a new design system. Fixes centered on:
+
+- dialog width and padding
+- tab wrapping
+- mobile navigation labels
+- calendar overflow handling
+- quiz and summary panel stacking
+- date formatting width pressure
+
+### Localization
+
+Phase 4 tightened the English/French boundary by:
+
+- auditing both dictionaries
+- removing awkward or stale French wording
+- ensuring high-pressure UI areas still render acceptably with longer French labels
+
+## Browser and Runtime Limits
+
+- IndexedDB availability and quota depend on the browser
+- browser notifications remain best-effort
+- preview and extraction quality depend on browser/runtime support
+- text-based PDF support does not imply OCR support
+- summaries and quizzes remain deterministic local heuristics, not cloud-model reasoning

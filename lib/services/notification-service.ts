@@ -1,7 +1,7 @@
 import type { NotificationPermissionState } from "@/types/entities";
 
 export function getBrowserNotificationPermission(): NotificationPermissionState {
-  if (typeof window === "undefined" || !("Notification" in window)) {
+  if (typeof window === "undefined" || typeof window.Notification === "undefined") {
     return "unsupported";
   }
 
@@ -9,7 +9,7 @@ export function getBrowserNotificationPermission(): NotificationPermissionState 
 }
 
 export async function requestBrowserNotificationPermission(): Promise<NotificationPermissionState> {
-  if (typeof window === "undefined" || !("Notification" in window)) {
+  if (typeof window === "undefined" || typeof window.Notification === "undefined") {
     return "unsupported";
   }
 
@@ -17,7 +17,7 @@ export async function requestBrowserNotificationPermission(): Promise<Notificati
 }
 
 export function sendBrowserNotification(title: string, options?: NotificationOptions) {
-  if (typeof window === "undefined" || !("Notification" in window)) {
+  if (typeof window === "undefined" || typeof window.Notification === "undefined") {
     return null;
   }
 

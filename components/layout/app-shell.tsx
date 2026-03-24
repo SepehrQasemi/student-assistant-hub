@@ -84,9 +84,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
                 return (
                   <Button key={item.href} variant={active ? "default" : "ghost"} size="sm" asChild className="h-14 flex-col gap-1 rounded-2xl">
-                    <Link href={item.href}>
+                    <Link href={item.href} className="flex w-full flex-col items-center gap-1">
                       <Icon className="h-4 w-4" />
-                      <span className="text-[11px]">{t(item.key)}</span>
+                      <span className="line-clamp-2 text-center text-[10px] leading-tight">{t(item.key)}</span>
                     </Link>
                   </Button>
                 );

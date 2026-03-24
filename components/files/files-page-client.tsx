@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useI18n } from "@/lib/providers/i18n-provider";
 import { courseRepository, fileRepository, tagRepository } from "@/lib/repositories";
 import { filterAndSortFiles } from "@/lib/services/file-query-service";
-import { formatBytes } from "@/lib/utils";
+import { formatBytes, formatLocalizedDate, formatLocalizedDateTime } from "@/lib/utils";
 import type { FileFilters, StoredFileRecord } from "@/types/entities";
 
 const initialFilters: FileFilters = {
@@ -29,7 +29,7 @@ const initialFilters: FileFilters = {
 };
 
 export function FilesPageClient() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [importOpen, setImportOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<StoredFileRecord | null>(null);
   const [filters, setFilters] = useState<FileFilters>(initialFilters);
@@ -169,7 +169,7 @@ export function FilesPageClient() {
                 >
                   <div>
                     <p className="font-medium text-slate-900">{file.name}</p>
-                    <p className="text-xs text-slate-500">{new Date(file.importedAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-slate-500">{formatLocalizedDate(file.importedAt, locale)}</p>
                   </div>
                   <Badge variant="muted">{formatBytes(file.sizeBytes)}</Badge>
                 </button>
@@ -222,7 +222,7 @@ export function FilesPageClient() {
                   </div>
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>{formatBytes(file.sizeBytes)}</span>
-                    <span>{new Date(file.importedAt).toLocaleDateString()}</span>
+                    <span>{formatLocalizedDate(file.importedAt, locale)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -247,9 +247,9 @@ export function FilesPageClient() {
                   </div>
                   <p className="text-sm text-slate-600">{courseMap.get(file.courseId ?? "")?.name ?? t("common.noCourse")}</p>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-slate-500">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                   <span>{formatBytes(file.sizeBytes)}</span>
-                  <span>{new Date(file.importedAt).toLocaleString()}</span>
+                  <span>{formatLocalizedDateTime(file.importedAt, locale)}</span>
                 </div>
               </button>
             ))}

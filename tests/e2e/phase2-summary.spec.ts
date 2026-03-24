@@ -53,9 +53,9 @@ test("generates local summaries and reopens them after reload", async ({ page })
 
   await page.getByRole("button", { name: /distributed-notes/i }).first().click();
   const frenchDialog = page.getByRole("dialog");
-  await frenchDialog.getByRole("tab", { name: "Resumes" }).click();
+  await frenchDialog.getByRole("tab", { name: "Résumés" }).click();
 
-  await expect(frenchDialog.getByText("Historique des resumes")).toBeVisible();
+  await expect(frenchDialog.getByText("Historique des résumés")).toBeVisible();
   await expect(frenchDialog.getByText("Vue d'ensemble")).toBeVisible();
-  await expect(frenchDialog.getByRole("button", { name: /Resume rapide Actuel/i })).toBeVisible();
+  await expect(frenchDialog.getByRole("button", { name: /Résumé rapide Actuel/i })).toBeVisible();
 });

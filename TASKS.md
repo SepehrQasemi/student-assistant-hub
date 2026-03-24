@@ -1,28 +1,29 @@
 # Implementation Backlog
 
-## Completed Foundations
+## Completed Product Foundation
 
 - [x] Phase 1 offline-first workspace
 - [x] Phase 2 local document extraction and summarization
 - [x] Phase 3 local quiz generation, execution, scoring, review, and history
+- [x] Phase 4 hardening pass for startup, verification, coverage, responsive UX, and bilingual cleanup
 
-## Phase 3 Follow-Up Hardening
+## High-Confidence Follow-Ups
 
-- [ ] Add manual regenerate controls for quizzes when users want a fresh artifact even if the current fingerprint and options already match a stored quiz.
-- [ ] Add richer diagnostics for quiz generation failures caused by low-signal or sparse source material.
-- [ ] Add broader quality fixtures for text-based PDF quiz generation.
-- [ ] Add denser attempt-comparison controls when a quiz accumulates many retries.
-- [ ] Add optional export of quiz history and attempt results.
+- [ ] Add export and restore for the full local workspace.
+- [ ] Add safer backup guidance for users who rely on IndexedDB-only persistence.
+- [ ] Add broader text-based PDF fixtures for extraction, summarization, and quiz-generation quality checks.
+- [ ] Add denser manual-regenerate controls for summaries and quizzes when users want a fresh artifact despite matching fingerprints.
+- [ ] Add richer diagnostics for low-signal study sources that are technically supported but weak for quiz generation.
 
-## Phase 4 Preparation
+## Product-Quality Follow-Ups
 
-- [ ] Use quiz attempt history to prioritize what should be reviewed next.
-- [ ] Connect summaries, quizzes, and calendar deadlines more explicitly inside the study workflow.
-- [ ] Design study-session orchestration around persisted summaries, quizzes, and attempts.
-- [ ] Add QA datasets for validating future review recommendations against deterministic local inputs.
+- [ ] Add a compact audit view for stale summaries and stale quizzes across all files.
+- [ ] Add optional archive or cleanup actions for old attempts and derived study artifacts.
+- [ ] Improve calendar interaction density on smaller screens without harming readability.
+- [ ] Add a clearer local-data reset or maintenance flow in settings.
 
-## Future Platform Work
+## Longer-Term Candidates
 
-- [ ] Add export and restore workflows for full local workspace portability.
-- [ ] Design sync adapters only after export/import is stable.
-- [ ] Evaluate a desktop wrapper only if browser storage or background limits become a blocking issue.
+- [ ] Introduce export-first portability before considering any sync architecture.
+- [ ] Revisit a desktop wrapper only if browser storage or background limits become a real blocker.
+- [ ] Explore study-session prioritization using existing summaries, quizzes, reminders, and attempt history.

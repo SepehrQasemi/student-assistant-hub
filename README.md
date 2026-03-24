@@ -1,67 +1,129 @@
 # Student Assistant Hub
 
-Student Assistant Hub is an offline-first student workspace for managing courses, academic files, deadlines, calendar events, reminders, document summaries, and local study quizzes in one place.
+Student Assistant Hub is an offline-first student workspace for managing courses, academic files, calendar events, reminders, local summaries, and local study quizzes in one place.
 
-Phase 1 delivered the local workspace foundation. Phase 2 added local document extraction and summarization. Phase 3 now adds deterministic local quiz generation, execution, scoring, review, history, and stale-quiz detection without introducing any cloud service, remote AI API, or paid dependency.
+The project is intentionally browser-local:
 
-## Product Vision
+- no backend
+- no cloud storage
+- no remote AI services
+- no paid inference APIs
 
-Students often split their academic workflow across folders, calendars, reminders, notes apps, and disconnected study tools. Student Assistant Hub brings those responsibilities into one privacy-friendly workspace and then layers document understanding and active recall workflows on top of the same local file context.
+## Current Status
 
-The product roadmap is:
+Phases 1 through 4 are implemented.
 
 - Phase 1: offline-first workspace, file manager, calendar, reminders, dashboard, settings
-- Phase 2: local document processing and summarization for supported files
-- Phase 3: local quiz generation, execution, scoring, review, and history
-- Phase 4: extended study workflow built on persisted summaries and quiz artifacts
+- Phase 2: local document extraction, normalization, chunking, summarization, and concept extraction
+- Phase 3: local quiz generation, execution, scoring, review, history, and stale-quiz handling
+- Phase 4: hardening pass covering startup scripts, verification tooling, coverage reporting, responsive cleanup, and English/French audit
 
-## Current Scope
+Phase 4 is a product-quality pass, not a new feature domain. The current repository is the hardened local product foundation.
 
-The repository now contains:
+## Implemented Product Scope
 
 - bilingual English and French UI
 - local IndexedDB persistence through Dexie
 - courses CRUD
-- offline file workspace with local blob storage and realistic previews
+- offline file workspace with blob storage, metadata editing, filters, notes, tags, and realistic previews
 - calendar with day, week, month, quarter, and agenda views
 - reminders and in-app notification center
 - dashboard and settings
-- local document extraction for plain text, markdown, and text-based PDFs
-- local text normalization, chunking, deterministic summarization, and concept extraction
-- summary history and stale summary detection
-- local quiz generation from extracted file content
-- quiz execution, scoring, per-question review, retry, and history
-- stale quiz detection when a file source changes
-- automated unit, component, repository, and end-to-end tests
+- local extraction for plain text, markdown, and text-based PDFs
+- deterministic summaries and key concepts
+- summary history and stale-summary detection
+- deterministic local quiz generation from one file at a time
+- quiz history, attempt history, scoring, explanations, and stale-quiz detection
+- startup scripts for Windows and Unix-like shells
+- `npm run verify`, `npm run verify:full`, and coverage reporting
+- unit, integration, component, and end-to-end tests
 
-## Phase 3 Summary
+## Stack
 
-Phase 3 is intentionally not a chat or cloud AI phase. It focuses on local study quizzes that reuse the Phase 2 pipeline.
+- Next.js App Router
+- TypeScript
+- Tailwind CSS
+- shadcn/ui-style component structure
+- Dexie / IndexedDB
+- React Hook Form + Zod
+- FullCalendar
+- `pdfjs-dist`
+- Vitest + Testing Library
+- Playwright
 
-Implemented Phase 3 capabilities:
+## Quick Start
 
-- derive quiz candidates from extracted text, headings, summary sections, and key concepts
-- generate deterministic quizzes for one source file at a time
-- support three quiz modes:
-  - `multiple_choice`
-  - `true_false`
-  - `mixed`
-- support quiz focus modes:
-  - `balanced`
-  - `key_concepts`
-  - `review`
-- persist quizzes, questions, attempts, and answers locally
-- score attempts and show per-question correctness
-- store explanations when quiz generation options include them
-- revisit quiz history by file
-- revisit prior attempts and review results later
-- detect stale quizzes when the source file fingerprint changes
+### One-click / script-based run
 
-Short-answer support is intentionally deferred in Phase 3 because the current local-only evaluation boundary is not strong enough to claim robust grading.
+Windows double-click:
 
-## Supported Inputs For Quiz Generation
+- `RUN_ME_WINDOWS.bat`
 
-Quiz generation depends on the existing Phase 2 extraction pipeline. In practice, that means quiz generation currently works for files that can already be processed locally:
+Windows PowerShell:
+
+```powershell
+./RUN_ME_WINDOWS.ps1
+```
+
+Unix-like shell:
+
+```bash
+./RUN_ME_UNIX.sh
+```
+
+Stop scripts:
+
+- Windows: `./STOP_WINDOWS.ps1`
+- Unix-like: `./STOP_UNIX.sh`
+
+### Standard npm run path
+
+```bash
+npm install
+npx playwright install
+npm run dev
+```
+
+## Verification
+
+Primary verification path:
+
+```bash
+npm run verify
+```
+
+This runs:
+
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+
+Extended verification:
+
+```bash
+npm run verify:full
+```
+
+This adds:
+
+- `npm run test:e2e`
+
+Coverage:
+
+```bash
+npm run coverage
+```
+
+Current global coverage thresholds:
+
+- lines: `72%`
+- statements: `72%`
+- functions: `72%`
+- branches: `62%`
+
+## Supported Study Inputs
+
+Supported for local extraction and downstream study workflows:
 
 - plain text files
 - markdown files
@@ -70,66 +132,37 @@ Quiz generation depends on the existing Phase 2 extraction pipeline. In practice
 Explicitly not supported:
 
 - scanned or image-only PDFs that require OCR
-- images as quiz sources
+- images as study inputs
 - audio or video
-- remote or cloud quiz generation
-- fake support for formats that cannot be parsed reliably in the browser
-- essay-style or free-form grading
+- remote summarization
+- remote quiz generation
+- essay grading
 
-## Architecture Direction
+## Honest Runtime Limits
 
-The application is built with:
-
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- shadcn/ui-style component architecture
-- Dexie for IndexedDB persistence
-- React Hook Form + Zod
-- FullCalendar for calendar rendering
-- `pdfjs-dist` for local text extraction from text-based PDFs
-- deterministic local summarization services built on extraction, normalization, chunking, and concept scoring
-- deterministic local quiz-generation services built on extracted text, concept artifacts, and source fingerprints
-- Vitest and Testing Library for automated tests
-- Playwright for end-to-end verification where feasible
-
-The codebase is separated into:
-
-- `app/` for routes and page composition
-- `components/` for reusable UI and feature components
-- `lib/db/` for Dexie schema and initialization
-- `lib/repositories/` for persistence-facing data access
-- `lib/services/` for document ingestion, summarization, quiz generation, scoring, reminders, dashboard logic, and notification workflows
-- `lib/i18n/` for bilingual translation infrastructure
-- `types/` for domain entities and derived study artifacts
-
-## Browser and Runtime Constraints
-
-Student Assistant Hub remains honest about web platform limits:
-
-- IndexedDB storage quotas depend on the browser
-- browser notifications are helpful but not guaranteed when the app is closed
-- PDF extraction only works for text-based PDFs
-- scanned PDFs and image-only documents are not treated as supported study inputs
-- summaries and quizzes are deterministic local heuristics, not cloud-grade language-model reasoning
-- short-answer grading is intentionally deferred instead of being faked
+- IndexedDB quota depends on the browser
+- browser notifications are best-effort, not native-background guarantees
+- preview and extraction support depend on what the browser can safely render or parse
+- summaries and quizzes are deterministic local heuristics, not cloud LLM reasoning
+- clearing site data removes the local workspace and derived study artifacts
 
 ## Project Structure
 
 ```text
 app/                Next.js routes and layouts
-components/         UI building blocks and feature components
-docs/               product, architecture, QA, and implementation reports
-lib/db/             Dexie schema and local database utilities
-lib/i18n/           translation dictionaries and i18n helpers
-lib/repositories/   local persistence repositories
-lib/services/       document, summary, quiz, dashboard, reminder, and notification services
-lib/validation/     Zod schemas and form validation factories
-tests/              unit, component, repository, and end-to-end tests
-types/              shared TypeScript domain types
+components/         Reusable UI and feature components
+docs/               Product docs and implementation reports
+lib/db/             Dexie schema and defaults
+lib/i18n/           Locale dictionaries and helpers
+lib/repositories/   Persistence boundaries
+lib/services/       Product logic, reminders, summaries, and quizzes
+lib/validation/     Zod validation schemas
+scripts/            Verification helpers
+tests/              Unit, component, integration, and e2e tests
+types/              Shared domain types
 ```
 
-## Documentation Index
+## Documentation
 
 - [Product Specification](docs/spec.md)
 - [Roadmap](docs/roadmap.md)
@@ -138,33 +171,11 @@ types/              shared TypeScript domain types
 - [User Flows](docs/user-flows.md)
 - [UI Pages](docs/ui-pages.md)
 - [Setup Guide](docs/setup.md)
-- [Phase 1 Implementation Report](docs/phase1-implementation-report.md)
-- [Phase 2 Implementation Report](docs/phase2-implementation-report.md)
-- [Phase 3 Implementation Report](docs/phase3-implementation-report.md)
+- [Phase 1 Report](docs/phase1-implementation-report.md)
+- [Phase 2 Report](docs/phase2-implementation-report.md)
+- [Phase 3 Report](docs/phase3-implementation-report.md)
+- [Phase 4 Hardening Report](docs/phase4-hardening-report.md)
 
-## Local Development
+## License
 
-Install dependencies:
-
-```bash
-npm install
-```
-
-Run the app:
-
-```bash
-npm run dev
-```
-
-Verification:
-
-```bash
-npm run lint
-npm run build
-npm run test
-npm run test:e2e
-```
-
-## Status
-
-This repository contains the offline-first Phase 1 application, the Phase 2 local document-processing foundation, and the Phase 3 local quiz workflow. Future phases should reuse extracted text, chunks, concepts, summaries, quizzes, and attempt history rather than replacing the local-first architecture.
+MIT

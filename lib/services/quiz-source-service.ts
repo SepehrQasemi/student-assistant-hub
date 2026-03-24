@@ -10,7 +10,7 @@ function escapeRegExp(value: string) {
 
 function splitSentences(text: string) {
   return text
-    .split(/(?<=[.!?])\s+(?=[A-ZÀ-ÖØ-Þ0-9#*-])/u)
+    .split(/(?<=[.!?])\s+(?=[\p{Lu}0-9#*-])/u)
     .map((sentence) => sentence.trim())
     .filter((sentence) => sentence.length >= 30);
 }

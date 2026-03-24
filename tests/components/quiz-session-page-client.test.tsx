@@ -116,9 +116,9 @@ describe("QuizSessionPageClient", () => {
     renderWithProviders(<QuizSessionPageClient quizId={generated.quiz.id} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Resultats et revision")).toBeInTheDocument();
-      expect(screen.getAllByText("Genere depuis une ancienne version du fichier").length).toBeGreaterThan(0);
-      expect(screen.getAllByText((_, element) => element?.textContent?.includes("Votre reponse") ?? false).length).toBeGreaterThan(0);
+      expect(screen.getByText("Résultats et révision")).toBeInTheDocument();
+      expect(screen.getAllByText("Généré depuis une ancienne version du fichier").length).toBeGreaterThan(0);
+      expect(screen.getAllByText((_, element) => element?.textContent?.includes("Votre réponse") ?? false).length).toBeGreaterThan(0);
     });
   });
 });

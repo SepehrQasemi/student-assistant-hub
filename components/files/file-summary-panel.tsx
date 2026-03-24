@@ -10,6 +10,7 @@ import { extractedDocumentRepository } from "@/lib/repositories";
 import { useI18n } from "@/lib/providers/i18n-provider";
 import { detectDocumentType } from "@/lib/services/document-file-type";
 import { documentSummaryService } from "@/lib/services/document-summary-service";
+import { formatLocalizedDateTime } from "@/lib/utils";
 import type { StoredFileRecord, SummaryMode } from "@/types/entities";
 
 const summaryModes: SummaryMode[] = ["quick_summary", "structured_summary", "study_notes", "key_concepts"];
@@ -35,7 +36,7 @@ function splitBulletText(text: string) {
 }
 
 export function FileSummaryPanel({ file }: { file: StoredFileRecord }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [selectedSummaryId, setSelectedSummaryId] = useState<string | null>(null);
   const [generatingMode, setGeneratingMode] = useState<SummaryMode | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
@@ -200,7 +201,7 @@ export function FileSummaryPanel({ file }: { file: StoredFileRecord }) {
                     {summary.stale ? <Badge variant="danger">{t("summaries.staleBadge")}</Badge> : <Badge variant="accent">{t("summaries.currentBadge")}</Badge>}
                   </div>
                   <p className={`mt-2 text-xs ${selectedSummaryId === summary.id ? "text-slate-200" : "text-slate-500"}`}>
-                    {new Date(summary.createdAt).toLocaleString()}
+                    {formatLocalizedDateTime(summary.createdAt, locale)}
                   </p>
                 </button>
               ))

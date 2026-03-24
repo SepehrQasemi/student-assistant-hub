@@ -45,7 +45,10 @@ test("generates a local quiz, completes it, reopens history, and detects stalene
   await expect(detailDialog.getByText("Quiz history")).toBeVisible();
   await expect(detailDialog.getByRole("link", { name: "Start quiz" })).toBeVisible();
 
-  await detailDialog.getByRole("link", { name: "Start quiz" }).click();
+  await Promise.all([
+    page.waitForURL(/\/quizzes\/.+$/),
+    detailDialog.getByRole("link", { name: "Start quiz" }).click(),
+  ]);
 
   await expect(page.getByRole("button", { name: "Start quiz" })).toBeVisible();
   await page.getByRole("button", { name: "Start quiz" }).click();
@@ -64,7 +67,7 @@ test("generates a local quiz, completes it, reopens history, and detects stalene
   await expect(page.getByText("Explanation:").first()).toBeVisible();
 
   await selectOption(page, page.locator("header").getByRole("combobox"), "French");
-  await expect(page.getByText("Resultats et revision")).toBeVisible();
+  await expect(page.getByText("Résultats et révision")).toBeVisible();
 
   await page.getByRole("link", { name: "Retour aux fichiers" }).click();
 
@@ -73,9 +76,9 @@ test("generates a local quiz, completes it, reopens history, and detects stalene
   await frenchDialog.getByRole("tab", { name: "Quiz" }).click();
 
   await expect(frenchDialog.getByText("Historique des quiz")).toBeVisible();
-  await expect(frenchDialog.getByText("1 tentative(s)")).toBeVisible();
+  await expect(frenchDialog.getByText("1 tentative(s)", { exact: true })).toBeVisible();
 
-  await frenchDialog.getByRole("tab", { name: "Details" }).click();
+  await frenchDialog.getByRole("tab", { name: "Détails" }).click();
   await frenchDialog.locator('input[type="file"]').setInputFiles({
     name: "distributed-quiz-notes.md",
     mimeType: "text/markdown",
@@ -84,5 +87,5 @@ test("generates a local quiz, completes it, reopens history, and detects stalene
   await frenchDialog.getByRole("button", { name: "Remplacer le fichier source" }).click();
 
   await frenchDialog.getByRole("tab", { name: "Quiz" }).click();
-  await expect(frenchDialog.getByText("Quiz obsolete").first()).toBeVisible();
+  await expect(frenchDialog.getByText("Quiz obsolète").first()).toBeVisible();
 });

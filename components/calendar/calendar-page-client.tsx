@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useI18n } from "@/lib/providers/i18n-provider";
 import { courseRepository, eventRepository, settingsRepository } from "@/lib/repositories";
 import { filterEvents, getEventColor } from "@/lib/services/event-query-service";
+import { formatLocalizedDateTime } from "@/lib/utils";
 import type { CalendarEvent, CalendarView, EventType } from "@/types/entities";
 
 const calendarViewMap: Record<Exclude<CalendarView, "agenda">, string> = {
@@ -31,7 +32,7 @@ const calendarViewMap: Record<Exclude<CalendarView, "agenda">, string> = {
 };
 
 export function CalendarPageClient() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [viewOverride, setViewOverride] = useState<CalendarView | null>(null);
   const [courseFilter, setCourseFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState<EventType | "all">("all");
@@ -200,7 +201,7 @@ export function CalendarPageClient() {
                     {event.courseId && courseMap.get(event.courseId) ? <Badge variant="muted">{courseMap.get(event.courseId)?.name}</Badge> : null}
                   </div>
                   <h3 className="font-semibold text-slate-900">{event.title}</h3>
-                  <p className="text-sm text-slate-600">{new Date(event.startsAt).toLocaleString()}</p>
+                  <p className="text-sm text-slate-600">{formatLocalizedDateTime(event.startsAt, locale)}</p>
                 </div>
                 <span className="h-4 w-4 rounded-full" style={{ backgroundColor: getEventColor(event, courseMap) }} />
               </button>
@@ -209,28 +210,30 @@ export function CalendarPageClient() {
         </Card>
       ) : (
         <Card>
-          <CardContent className="p-3 md:p-5">
-            <FullCalendar
-              key={view}
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, multiMonthPlugin, listPlugin]}
-              initialView={calendarViewMap[view as Exclude<CalendarView, "agenda">]}
-              headerToolbar={false}
-              height="auto"
-              dayMaxEvents={3}
-              nowIndicator
-              selectable
-              events={calendarEvents}
-              dateClick={handleDateClick}
-              eventClick={handleEventClick}
-              views={{
-                multiMonthQuarter: {
-                  type: "multiMonth",
-                  duration: { months: 3 },
-                  multiMonthMaxColumns: 3,
-                },
-              }}
-              firstDay={settings?.weekStartsOn ?? 1}
-            />
+          <CardContent className="overflow-x-auto p-3 md:p-5">
+            <div className="min-w-[720px]">
+              <FullCalendar
+                key={view}
+                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, multiMonthPlugin, listPlugin]}
+                initialView={calendarViewMap[view as Exclude<CalendarView, "agenda">]}
+                headerToolbar={false}
+                height="auto"
+                dayMaxEvents={3}
+                nowIndicator
+                selectable
+                events={calendarEvents}
+                dateClick={handleDateClick}
+                eventClick={handleEventClick}
+                views={{
+                  multiMonthQuarter: {
+                    type: "multiMonth",
+                    duration: { months: 3 },
+                    multiMonthMaxColumns: 3,
+                  },
+                }}
+                firstDay={settings?.weekStartsOn ?? 1}
+              />
+            </div>
           </CardContent>
         </Card>
       )}

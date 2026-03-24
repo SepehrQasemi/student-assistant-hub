@@ -1,4 +1,5 @@
 import { formatDistanceToNowStrict, subMinutes } from "date-fns";
+import { enUS, fr } from "date-fns/locale";
 
 import { eventRepository, notificationRepository, reminderRepository, settingsRepository } from "@/lib/repositories";
 import { sendBrowserNotification } from "@/lib/services/notification-service";
@@ -53,7 +54,7 @@ export function isReminderDue(reminder: Reminder, referenceIso = nowIso()) {
 export function describeReminderDistance(scheduledFor: string, locale: Locale) {
   return formatDistanceToNowStrict(new Date(scheduledFor), {
     addSuffix: true,
-    locale: locale === "fr" ? undefined : undefined,
+    locale: locale === "fr" ? fr : enUS,
   });
 }
 
@@ -106,7 +107,7 @@ export class ReminderEngine {
     const locale = this.getLocale();
     const scheduledFor = getEffectiveReminderDate(reminder);
     const title = this.translator(locale, "notifications.title");
-    const body = `${event.title} • ${this.translator(locale, "calendar.eventDetails")}`;
+    const body = `${event.title} - ${this.translator(locale, "calendar.eventDetails")}`;
 
     await notificationRepository.createIfMissing({
       reminderId: reminder.id,

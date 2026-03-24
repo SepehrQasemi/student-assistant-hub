@@ -136,8 +136,8 @@ describe("FileSummaryPanel", () => {
     renderWithProviders(<FileSummaryPanel file={file} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Resumes")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Resume rapide" })).toBeInTheDocument();
+      expect(screen.getByText("Résumés")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Résumé rapide" })).toBeInTheDocument();
     });
   });
 });

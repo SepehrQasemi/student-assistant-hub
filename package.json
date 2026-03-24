@@ -9,8 +9,11 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "verify": "node scripts/verify.mjs",
+    "verify:full": "node scripts/verify.mjs --e2e"
   },
   "repository": {
     "type": "git",
@@ -61,6 +64,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.1",
     "autoprefixer": "^10.4.27",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.1",

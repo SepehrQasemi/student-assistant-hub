@@ -2,122 +2,105 @@
 
 ## Roadmap Overview
 
-The roadmap follows a local-first strategy. The product must become a trustworthy offline workspace before any optional sync or broader AI-assisted study features are introduced.
+The roadmap has been executed in a local-first order:
+
+1. build a trustworthy offline workspace
+2. add grounded document understanding
+3. add grounded study quizzes
+4. harden the product before any broader upgrade-oriented phase
 
 ## Phase 1: Offline-First Core Workspace
 
-### Goal
+### Status
 
-Deliver a fully usable local workspace for student organization with no backend requirement.
+Completed
 
-### Scope
+### Delivered Scope
 
-- bilingual English and French UI
+- bilingual UI
 - local Dexie persistence
 - courses CRUD
-- offline file manager with previews
-- local calendar with multiple views
+- offline file manager
+- calendar
 - reminders and notification center
 - dashboard
 - settings
-- automated tests and responsive UX
 
 ## Phase 2: Local Document Processing and Summarization
 
-### Goal
+### Status
 
-Add a real local document-understanding layer for supported files without cloud inference.
+Completed
 
-### Scope
+### Delivered Scope
 
-- file type detection for supported summarization inputs
-- local extraction for plain text, markdown, and text-based PDFs
-- extraction state tracking and persistence
-- text normalization and deterministic chunking
-- local summary generation for:
-  - `quick_summary`
-  - `structured_summary`
-  - `study_notes`
-  - `key_concepts`
-- concept extraction and persistence
-- summary history by file
-- stale summary detection using source fingerprints
-- UI integration inside the file workflow
-- test coverage for repositories, services, UI, and summary persistence
-
-### Milestones
-
-- M1: update docs and extend the local data model
-- M2: implement ingestion, extraction, and extraction persistence
-- M3: implement normalization, chunking, concept extraction, and summarization services
-- M4: implement summary persistence, history, and stale detection
-- M5: integrate summaries into the file UX and complete bilingual states
-- M6: QA, tests, and Phase 2 implementation report
+- file type detection
+- extraction for plain text, markdown, and text-based PDFs
+- extraction status persistence
+- normalization and chunking
+- deterministic summary modes
+- concept extraction
+- summary history
+- stale summary detection
 
 ## Phase 3: Local Quiz Generation, Execution, and Review
 
-### Goal
+### Status
 
-Turn extracted text, summaries, and concept artifacts into local study quizzes that can be taken, scored, reviewed, and revisited later.
+Completed
 
-### Scope
+### Delivered Scope
 
-- question source selection from extracted text and summary artifacts
-- deterministic local quiz generation for one file at a time
-- supported question types:
-  - `multiple_choice`
-  - `true_false`
-- supported quiz modes:
-  - `multiple_choice`
-  - `true_false`
-  - `mixed`
-- quiz generation options:
-  - question count
-  - mode
-  - focus mode
-  - include explanations
+- quiz generation from one supported file at a time
+- deterministic multiple-choice and true/false questions
+- quiz options for count, mode, focus mode, and explanations
 - quiz persistence
-- question persistence
 - attempt persistence
-- answer persistence
-- score calculation and per-question review
-- quiz history by file
-- stale quiz detection using source fingerprints
-- bilingual UI integration for quiz creation, play, review, and history
-- tests for services, repositories, UI, and end-to-end quiz flows
+- scoring and per-question review
+- quiz history and retry flow
+- stale quiz detection
 
-### Milestones
+## Phase 4: Hardening, Verification, and Product Cleanup
 
-- M1: update docs and extend the local data model for quizzes
-- M2: implement quiz source selection, candidate generation, and distractor logic
-- M3: implement question generation for multiple-choice and true/false
-- M4: implement quiz, question, attempt, and answer persistence
-- M5: implement quiz player, review route, history, and stale warnings
-- M6: complete bilingual coverage, tests, QA, and Phase 3 implementation report
+### Status
 
-### Rationale
+Completed
 
-Quiz generation should build on a stable document-processing pipeline rather than bypass it. Reusing extracted text, chunks, summaries, and concepts keeps the study workflow local, explainable, and testable.
+### Delivered Scope
 
-## Phase 4: Extended Study Workflow
-
-### Goal
-
-Extend the workspace from local quiz review into broader study-session workflows without abandoning the offline-first architecture.
-
-### Candidate Scope
-
-- deeper review prioritization based on prior attempts
-- richer transitions between summaries, quizzes, and calendar deadlines
-- more deliberate study-session orchestration around existing local artifacts
-- export or portability improvements for local study data
+- documentation audit and cleanup
+- Windows and Unix startup scripts
+- `npm run verify` and `npm run verify:full`
+- coverage reporting and thresholds
+- expanded unit, integration, component, and e2e tests
+- responsive audit and targeted UI fixes
+- English/French localization audit
+- French wording and rendering cleanup
+- final hardening report
 
 ### Rationale
 
-Phase 4 should build on persisted summaries, quizzes, and attempt history instead of replacing them with a separate platform.
+Phase 4 exists to increase trust in the product foundation before any broader future phase. It deliberately focuses on:
+
+- setup clarity
+- verification clarity
+- localization quality
+- responsive usability
+- stronger confidence in core workflows
+
+## Post-Phase 4 Candidate Work
+
+These are not completed and should remain clearly separated from shipped scope:
+
+- export and restore for local workspace portability
+- broader text-based PDF quality fixtures
+- stronger stale-artifact maintenance tools
+- study-session prioritization based on reminders, summaries, and attempts
+- desktop-wrapper evaluation only if browser limitations become blocking
 
 ## Rationale for Ordering
 
-1. The offline workspace had to be stable before document processing was added.
-2. Document extraction and summarization were prerequisites for grounded quiz generation.
-3. Quiz generation, execution, and review needed durable local artifacts before broader study orchestration could be added.
+1. The app needed a stable local workspace before document processing made sense.
+2. Document processing needed to exist before grounded quiz generation could be added.
+3. Quiz generation needed durable local artifacts before any broader study workflow could be trusted.
+4. Hardening needed to happen before adding another domain so the current foundation became easier to run, easier to verify, and safer to build on.

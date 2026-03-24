@@ -13,6 +13,9 @@ dist/
 coverage/
 test-results/
 playwright-report/
+.student-assistant-hub-dev.pid
+.student-assistant-hub-dev.log
+.student-assistant-hub-dev.err.log
 
 # logs
 *.log
