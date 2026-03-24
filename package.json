@@ -2,7 +2,7 @@
   "name": "student-assistant-hub",
   "version": "1.0.0",
   "private": true,
-  "description": "Offline-first student workspace for managing courses, files, calendar events, reminders, and study organization locally.",
+  "description": "Offline-first student workspace for managing courses, files, calendar events, reminders, local summaries, and study quizzes locally.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

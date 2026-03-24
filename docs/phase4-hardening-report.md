@@ -231,8 +231,8 @@ Unix-path verification through Git Bash:
 ```powershell
 bash -n RUN_ME_UNIX.sh
 bash -n STOP_UNIX.sh
-./RUN_ME_UNIX.sh
-./STOP_UNIX.sh
+bash RUN_ME_UNIX.sh
+bash STOP_UNIX.sh
 ```
 
 Main verification:

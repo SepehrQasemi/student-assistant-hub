@@ -38,4 +38,3 @@ Thumbs.db
 # tooling
 .vercel/
 .turbo/
-supabase/.temp/

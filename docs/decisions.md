@@ -1,41 +1,51 @@
 # Initial Decisions
 
+> Historical note: this document records bootstrap-era decisions. Some early assumptions were later superseded by the delivered offline-first architecture. Read it as project history, not as the current source of truth.
+
 ## 1. Documentation-First Start
 
-The repository starts with planning documents before application code. This reduces ambiguity and creates a stable reference for later implementation.
+This remained valid. The repository started with planning documents before application code so later implementation work had a stable reference point.
 
-## 2. Phase 1 Is an Operational MVP, Not an AI MVP
+## 2. The Early Product Had to Focus on the Workspace Core
 
-The first implementation phase focuses on the academic workspace core:
+The spirit of this decision remained valid, but the original Phase 1 shape changed as the product moved toward a fully local-first implementation.
 
-- auth
-- courses
-- files
-- calendar
-- reminders
-- dashboard
+What remained true:
 
-AI features are postponed until the core data model and user workflows are stable.
+- the core workspace had to come before summaries and quizzes
+- AI-style study features could not define the initial architecture
 
-## 3. Supabase Is the Primary Backend Service
+What changed:
 
-Supabase is the planned backend service for:
+- the delivered product did not keep the original backend-oriented auth plan
 
-- authentication
-- relational data
-- file storage
+## 3. Supabase as the Primary Backend Service
 
-This keeps the early product architecture compact while supporting secure ownership rules and future extensibility.
+This decision was superseded.
 
-## 4. Files Are Modeled as Metadata Plus Storage Objects
+The shipped product moved in the opposite direction:
 
-Academic files must have a database record and a storage object. This separation is required for:
+- offline-first
+- local-first
+- no backend requirement
+- no cloud storage requirement
 
-- searchable metadata
-- course assignment
-- category filtering
-- future AI processing references
+This superseded the initial Supabase assumption rather than partially implementing it.
 
-## 5. AI Artifacts Must Be Additive
+## 4. Files as Metadata Plus Binary Content
 
-Summaries and quizzes will be introduced as new domain tables instead of changing the meaning of course, file, or event records. This preserves the usefulness of the core workspace even if AI processing is unavailable.
+This decision remained valid, but the implementation boundary changed.
+
+What the product actually shipped:
+
+- file metadata stored locally
+- binary file payloads stored locally in IndexedDB
+- searchable metadata and derived study artifacts tied to the same file record
+
+The important modeling idea survived even though the storage implementation became fully local instead of backend-backed.
+
+## 5. Study Artifacts Must Be Additive
+
+This remained valid and is now reflected in the implementation.
+
+Summaries, concepts, quizzes, attempts, and answers are stored as separate artifacts rather than changing the meaning of course, file, or event records.

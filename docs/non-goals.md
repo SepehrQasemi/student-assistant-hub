@@ -1,5 +1,7 @@
 # Phase 1 Non-Goals
 
+> Historical note: this document records what Phase 1 intentionally excluded. Some of these items were delivered later in Phases 2 and 3, but they were correctly out of scope for the original workspace-first phase.
+
 The following are not targets for the first implementation phase:
 
 - AI-generated summaries

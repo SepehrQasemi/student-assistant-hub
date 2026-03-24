@@ -1,5 +1,7 @@
 # Bootstrap Report
 
+> Historical note: this report captures the original repository bootstrap state. Later phases replaced the early backend-oriented plan with a fully offline-first, local-first product. Read this as project history, not as the current implementation guide.
+
 ## 1. Executive Summary
 
 Student Assistant Hub was bootstrapped as a documentation-first repository. The workspace structure, core planning documents, git repository, initial commit, GitHub repository, and initial remote push were all completed successfully and verified.
@@ -26,7 +28,7 @@ The following foundation assets were created:
 | `docs/data-model.md` | Proposed entities, relationships, and controlled values |
 | `docs/user-flows.md` | Step-by-step flows for the core student journeys |
 | `docs/ui-pages.md` | Page-level planning for the main routes |
-| `docs/setup.md` | Local setup expectations, tooling, env vars, Supabase, and deployment notes |
+| `docs/setup.md` | Local setup expectations, tooling, env vars, and deployment notes |
 | `docs/decisions.md` | Initial architectural and scope decisions |
 | `docs/non-goals.md` | Explicit Phase 1 exclusions |
 | `TASKS.md` | Implementation backlog organized by module |
@@ -110,4 +112,8 @@ No blockers were encountered for the local bootstrap, git initialization, GitHub
 
 ## 10. Recommended Next Step
 
-Scaffold the Next.js application into the current structure, add Tailwind CSS and shadcn/ui, connect Supabase Auth and Postgres, and begin Phase 1 implementation with authentication and protected dashboard routing.
+This recommendation is historical and was later superseded. The actual implemented direction became:
+
+- fully local-first
+- no backend dependency
+- Phase 1 as the offline workspace foundation

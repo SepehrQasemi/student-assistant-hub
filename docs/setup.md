@@ -41,8 +41,7 @@ npx playwright install
 ### Unix-like shell
 
 ```bash
-chmod +x RUN_ME_UNIX.sh STOP_UNIX.sh
-./RUN_ME_UNIX.sh
+bash RUN_ME_UNIX.sh
 ```
 
 Stop commands:
@@ -52,7 +51,7 @@ Stop commands:
 ```
 
 ```bash
-./STOP_UNIX.sh
+bash STOP_UNIX.sh
 ```
 
 ## Standard npm Workflow
@@ -157,4 +156,4 @@ Browser notifications are optional and honest:
 
 ## Notes on Unix Script Verification
 
-The Unix run path is provided and documented for shell-based environments. In this Windows-heavy development environment, the PowerShell and batch paths were directly exercised, while the Unix scripts were validated by inspection and kept aligned with the same direct `node ... next dev` startup approach.
+The Unix run path was exercised through Git Bash in this repository cleanup cycle. The same scripts remain suitable for normal Unix-like shells, and the docs use `bash ...` so they do not depend on executable-bit preservation.

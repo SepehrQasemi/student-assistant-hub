@@ -68,13 +68,13 @@ Windows PowerShell:
 Unix-like shell:
 
 ```bash
-./RUN_ME_UNIX.sh
+bash RUN_ME_UNIX.sh
 ```
 
 Stop scripts:
 
 - Windows: `./STOP_WINDOWS.ps1`
-- Unix-like: `./STOP_UNIX.sh`
+- Unix-like: `bash STOP_UNIX.sh`
 
 ### Standard npm run path
 
