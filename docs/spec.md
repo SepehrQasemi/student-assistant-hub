@@ -2,52 +2,46 @@
 
 ## Product Overview
 
-Student Assistant Hub is an offline-first student workspace for organizing academic life locally in the browser. It is designed for students who need serious day-to-day support for courses, files, deadlines, exams, reminders, and weekly planning without depending on a backend service.
+Student Assistant Hub is an offline-first student workspace for organizing academic life locally in the browser. It helps students manage courses, files, deadlines, exams, reminders, and weekly planning without relying on a backend service.
 
-Phase 1 is intentionally local-first. It prioritizes reliability, clarity, and realistic browser behavior over cloud connectivity or AI features.
+Phase 2 extends the Phase 1 workspace with local document extraction and summarization for supported files. It does not introduce remote AI or cloud processing.
 
 ## Problem Statement
 
-Students routinely work across disconnected tools:
+Students do not just store files; they need to understand and revisit them quickly.
 
-- folders for lecture files
-- calendar tools for deadlines
-- reminder apps for exams
-- notes apps for personal study
-- course information spread across documents and chats
+After Phase 1, the workspace already solves organization and planning problems. The next problem is document comprehension:
 
-That fragmentation causes real operational problems:
+- lecture notes can be long and unevenly structured
+- PDFs and markdown notes often contain useful content that is slow to review manually
+- students need a quick recap before class, exams, or revision sessions
+- cloud summarization may be undesirable because of privacy, cost, or offline use
 
-- files become hard to find later
-- deadlines lose context because they are not connected to courses
-- reminders are easy to miss when they live in separate tools
-- there is no single dashboard showing what matters this week
-
-Student Assistant Hub solves this first as a structured local workspace, then leaves room for optional sync and AI later.
+Phase 2 solves this by adding a realistic, local summarization layer for supported text-friendly documents.
 
 ## Target Users
 
 Primary users:
 
-- students managing several courses at once
-- students handling many academic files and deadlines
-- students who want a privacy-friendly workspace that still works without online services
+- students managing several courses and many academic files
+- students who want private, local-first study tooling
+- students who revisit long notes and PDFs repeatedly
 
 Secondary users:
 
-- students who plan to use future sync or AI features later
-- students using a laptop-first workflow but needing responsive browser support on smaller screens
+- students preparing for future Phase 3 quiz workflows
+- students working in mixed English/French environments
 
 ## Primary Use Cases
 
-- create and maintain a course list
-- import local study files and keep them organized
-- assign files and events to courses
-- preview supported file types without leaving the workspace
-- plan classes, deadlines, exams, meetings, and personal study sessions
-- create multiple reminders for a single event
-- review a dashboard for upcoming deadlines, exams, reminders, and recent files
-- switch the application between English and French
+- select a file from the offline file workspace
+- detect whether the file is supported for extraction
+- extract raw text locally where feasible
+- normalize the text into a reusable document representation
+- generate multiple summary modes for study and review
+- extract key concepts from the document text
+- persist summaries and revisit them later
+- detect whether older summaries are stale after the source file changes
 
 ## Phase 1 Scope
 
@@ -63,51 +57,73 @@ Phase 1 includes:
 - settings for language, notification preferences, and local app behavior
 - automated tests and responsive UX
 
-## Out of Scope for Phase 1
+## Phase 2 Scope
 
-Phase 1 does not include:
+Phase 2 includes:
 
-- Supabase, Firebase, or any hosted backend
-- online authentication
-- multi-device sync
-- collaborative workspaces
-- AI summaries
-- AI quiz generation
-- advanced background notification guarantees beyond browser capabilities
-- pretending unsupported file formats are previewable when they are not
+- supported file type detection for summarization
+- local extraction for plain text, markdown, and text-based PDFs
+- extraction state persistence
+- text normalization
+- deterministic chunking for long documents
+- local summarization modes:
+  - `quick_summary`
+  - `structured_summary`
+  - `study_notes`
+  - `key_concepts`
+- key concept extraction and persistence
+- summary history by file
+- stale summary detection using source fingerprints
+- bilingual UI coverage for all new Phase 2 states and actions
+- automated tests for extraction, summarization, persistence, UI, and stale detection
 
-## Success Criteria for Phase 1
+## Out of Scope for Phase 2
 
-Phase 1 is successful when a student can:
+Phase 2 does not include:
 
-- use the application without any cloud dependency
-- switch between English and French without partial translations
-- create, edit, and delete courses locally
-- import and manage files locally with metadata, notes, filters, and sorting
-- preview PDFs, images, and plain text files where browser support exists
-- create, edit, filter, and review events across multiple calendar views
-- configure and manage multiple reminders per event
-- use the dashboard to understand what matters now
+- OpenAI APIs or any remote inference service
+- cloud sync
+- OCR for scanned or image-only PDFs
+- image-based summarization
+- DOC or DOCX parsing when reliability is uncertain
+- full semantic search
+- quiz generation
+- flashcards
+- chat with documents
+
+## Success Criteria for Phase 2
+
+Phase 2 is successful when a student can:
+
+- choose a supported file from the file manager
+- see whether the file is supported, empty, failed, or successfully extracted
+- generate one or more local summaries from extracted text
+- review structured sections and key concepts
+- reopen older summaries later from file history
+- clearly see when a stored summary is outdated because the source file changed
+- switch the UI between English and French without leaving Phase 2 strings untranslated
 
 Engineering-level success criteria:
 
-- persistence is routed through repositories rather than page components
-- IndexedDB schemas are versioned and migration-friendly
-- reminder behavior is abstracted behind a scheduler layer
-- tests validate real behavior across repositories, services, and selected UI flows
+- extraction and summarization logic live outside page components
+- persistence is routed through repositories
+- extracted text and summary artifacts are reusable for future quiz generation
+- file fingerprint comparison is deterministic and tested
+- unsupported formats and failed extraction states are explicit, not hidden
 
 ## Constraints and Assumptions
 
 ### Constraints
 
-- the product must be fully usable without remote services
-- the application must remain honest about browser notification and storage limits
-- user-facing strings should be translatable through one consistent i18n strategy
-- the file manager is the most important module in Phase 1
+- the product must remain offline-first and local-only
+- the implementation must remain honest about PDF and browser limitations
+- user-facing strings must continue to flow through the existing i18n layer
+- the file manager remains the central product surface for this phase
 
 ### Assumptions
 
-- the app is used by a single person per browser profile
-- local data loss can occur if the user clears browser storage
-- browser notifications are opportunistic and depend on permission plus the app being able to execute
-- future sync should extend the repository layer rather than force a rewrite of the UI
+- the app is still used by one person per browser profile
+- local data can still be lost if the user clears site storage
+- PDF extraction quality depends on text actually being embedded in the PDF
+- summary quality is deterministic and heuristic, not equivalent to large-model reasoning
+- future quiz generation should consume extracted text and concept artifacts instead of re-parsing files from scratch

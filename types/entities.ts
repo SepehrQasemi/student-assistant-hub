@@ -28,6 +28,21 @@ export type FileSort = "recent" | "name" | "size";
 
 export type FileViewMode = "grid" | "list";
 
+export type DocumentType = "plain_text" | "markdown" | "pdf_text" | "unsupported";
+
+export type ExtractionStatus = "pending" | "success" | "failed" | "unsupported" | "empty";
+
+export type SummaryMode = "quick_summary" | "structured_summary" | "study_notes" | "key_concepts";
+
+export type SummarySectionKey =
+  | "overview"
+  | "mainTopics"
+  | "keyIdeas"
+  | "importantDetails"
+  | "reviewFirst"
+  | "watchFor"
+  | "concepts";
+
 export interface BaseEntity {
   id: string;
   createdAt: string;
@@ -62,6 +77,8 @@ export interface StoredFileRecord extends BaseEntity {
   blobId: string;
   importedAt: string;
   previewKind: FilePreviewKind;
+  contentFingerprint: string;
+  contentUpdatedAt: string;
 }
 
 export interface FileBlobRecord {
@@ -115,6 +132,41 @@ export interface AppSettings {
   weekStartsOn: 0 | 1;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ExtractedDocument extends Omit<BaseEntity, "deletedAt"> {
+  fileId: string;
+  sourceFingerprint: string;
+  sourceUpdatedAt: string;
+  documentType: DocumentType;
+  status: ExtractionStatus;
+  rawText: string;
+  normalizedText: string;
+  characterCount: number;
+  chunkCount: number;
+  errorMessage: string | null;
+}
+
+export interface SummaryRecord extends Omit<BaseEntity, "deletedAt"> {
+  fileId: string;
+  extractedDocumentId: string;
+  sourceFingerprint: string;
+  mode: SummaryMode;
+  overview: string;
+}
+
+export interface SummarySection extends Omit<BaseEntity, "deletedAt"> {
+  summaryId: string;
+  sectionKey: SummarySectionKey;
+  order: number;
+  content: string;
+}
+
+export interface SummaryConcept extends Omit<BaseEntity, "deletedAt"> {
+  summaryId: string;
+  term: string;
+  score: number;
+  occurrences: number;
 }
 
 export interface ReminderFormValue {

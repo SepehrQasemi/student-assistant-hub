@@ -1,33 +1,27 @@
 # Implementation Backlog
 
-## Phase 1 Completed
+## Completed Foundations
 
-- [x] Rewrite the documentation set for an offline-first, backend-free Phase 1.
-- [x] Scaffold Next.js App Router, Tailwind CSS, reusable UI primitives, Dexie, i18n, and test infrastructure.
-- [x] Implement bilingual English and French UI switching with persisted language preference.
-- [x] Implement local courses CRUD with validation and color-linked usage across the app.
-- [x] Implement offline file import, local blob storage, metadata editing, notes, tags, previews, filters, sorting, and recent files.
-- [x] Implement local calendar event CRUD with day, week, month, quarter, and agenda views.
-- [x] Implement reminder scheduling, in-app notification center actions, browser notification permission flow, and local reminder persistence.
-- [x] Implement dashboard summaries, quick actions, and settings for language, notifications, calendar defaults, and storage visibility.
-- [x] Add unit, component, and end-to-end test coverage for critical Phase 1 workflows.
+- [x] Phase 1 offline-first workspace
+- [x] Phase 2 local document extraction and summarization
 
-## Near-Term Follow-Up
+## Phase 2 Follow-Up Hardening
 
-- [ ] Add export and backup workflows for local data safety.
-- [ ] Add import and restore workflows for moving between browsers or devices.
-- [ ] Improve dense-calendar mobile interactions after real usage feedback.
-- [ ] Add richer bulk actions in the file manager once export and backup exist.
-- [ ] Add duplicate detection heuristics for repeated file imports.
+- [ ] Add optional export of extracted documents and summary history.
+- [ ] Add an explicit regenerate action for users who want a fresh artifact even when the current fingerprint and mode already have a stored summary.
+- [ ] Add richer PDF extraction diagnostics for malformed but text-based PDFs.
+- [ ] Add denser history controls for files with many summaries.
+- [ ] Add summary cleanup tools for large local workspaces.
 
-## Future Sync and Platform Work
+## Phase 3 Preparation
 
-- [ ] Design a sync adapter boundary that preserves the current repository contracts.
-- [ ] Add conflict-handling rules before introducing optional online sync.
-- [ ] Evaluate a desktop wrapper only if browser storage or notification limits become a blocking issue.
+- [ ] Reuse extracted text and chunking artifacts for quiz generation.
+- [ ] Define question templates that consume key concepts and summary sections.
+- [ ] Persist quiz drafts without mutating summary artifacts.
+- [ ] Add QA datasets for validating quiz quality against deterministic extracted inputs.
 
-## Future AI Phases
+## Future Platform Work
 
-- [ ] Add AI summaries only after the offline-first core remains stable and well tested.
-- [ ] Add AI quiz generation as an additive study feature, not as a replacement for local organization.
-- [ ] Add quiz interaction workflows after summaries and quiz generation are proven useful.
+- [ ] Add export and restore workflows for full local workspace portability.
+- [ ] Design sync adapters only after export/import is stable.
+- [ ] Evaluate a desktop wrapper only if browser storage or background limits become a blocking issue.

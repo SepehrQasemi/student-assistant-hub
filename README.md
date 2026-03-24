@@ -1,44 +1,70 @@
 # Student Assistant Hub
 
-Student Assistant Hub is an offline-first student workspace for managing courses, academic files, deadlines, calendar events, reminders, and study organization in one place.
+Student Assistant Hub is an offline-first student workspace for managing courses, academic files, calendar events, reminders, and study organization in one place.
 
-Phase 1 is implemented as a fully local web application foundation. It does not require Supabase, Firebase, or any backend service. All primary data is stored locally in the browser through IndexedDB via Dexie.
+Phase 1 delivered the local workspace foundation. Phase 2 adds local document extraction and summarization for supported files without introducing any cloud service, remote inference, or paid API dependency.
 
 ## Product Vision
 
-Students often split their academic workflow across folders, cloud drives, calendars, reminders, and notes tools that do not share context. Student Assistant Hub brings those responsibilities into one productivity workspace with a future path toward optional sync and AI-assisted study features.
+Students often split their academic workflow across folders, calendars, reminders, and notes tools that do not share context. Student Assistant Hub brings those responsibilities into one privacy-friendly workspace and now starts building local document understanding on top of the existing file manager.
 
-Phase 1 focuses on making the local workspace genuinely useful before adding any online dependency:
+The product roadmap remains:
 
-- bilingual UI: English default, French secondary
-- course management
-- offline file workspace with local blob storage
-- full calendar views
-- reminders and in-app notifications
-- dashboard overview
-- settings and storage visibility
-- tests from the start
+- Phase 1: offline-first workspace, file manager, calendar, reminders, dashboard, settings
+- Phase 2: local document processing and summarization for supported files
+- Phase 3: quiz generation built on extracted text, chunks, and concept artifacts
+- Phase 4: quiz interaction and extended study workflow
 
-## Phase 1 Scope
+## Current Scope
 
-Phase 1 is complete when the local application can:
+The repository now contains:
 
-- create, edit, list, and delete courses
-- import one or multiple files and store them locally
-- filter, search, sort, preview, and organize files
-- create, edit, and delete local calendar events
-- attach multiple reminders to events
-- surface reminders through an in-app notification center
-- switch language between English and French
-- persist settings and workspace data locally
+- bilingual English and French UI
+- local IndexedDB persistence through Dexie
+- courses CRUD
+- offline file workspace with local blob storage and realistic previews
+- calendar with day, week, month, quarter, and agenda views
+- reminders and in-app notification center
+- dashboard and settings
+- local document extraction for plain text, markdown, and text-based PDFs
+- local text normalization, chunking, and deterministic summarization
+- summary history and stale summary detection
+- automated unit, component, repository, and end-to-end tests
 
-Phase 1 explicitly excludes:
+## Phase 2 Summary
 
-- cloud sync
-- online authentication
-- AI summaries
-- AI quiz generation
-- collaboration features
+Phase 2 is intentionally not a general AI phase. It focuses on local document understanding that is useful, testable, and honest about browser limits.
+
+Implemented Phase 2 capabilities:
+
+- detect supported file types for summarization
+- extract text locally where feasible
+- normalize extracted text for reuse
+- chunk long documents deterministically
+- generate four local summary modes:
+  - `quick_summary`
+  - `structured_summary`
+  - `study_notes`
+  - `key_concepts`
+- persist extracted documents, summaries, sections, and concept artifacts locally
+- revisit summary history by file
+- detect stale summaries when a file source changes
+
+## Supported Formats
+
+Supported in Phase 2:
+
+- plain text files
+- markdown files
+- text-based PDFs
+
+Explicitly not supported in Phase 2:
+
+- scanned or image-only PDFs that require OCR
+- images as summarization inputs
+- audio or video
+- remote or cloud summarization
+- fake support for formats that cannot be parsed reliably in the browser
 
 ## Architecture Direction
 
@@ -51,39 +77,30 @@ The application is built with:
 - Dexie for IndexedDB persistence
 - React Hook Form + Zod
 - FullCalendar for calendar rendering
-- Notifications API where the browser allows it
-- Vitest and Testing Library for automated testing
+- `pdfjs-dist` for local text extraction from text-based PDFs
+- deterministic local summarization services built on extraction, normalization, chunking, and concept scoring
+- Vitest and Testing Library for automated tests
 - Playwright for end-to-end verification where feasible
 
 The codebase is separated into:
 
 - `app/` for routes and page composition
 - `components/` for reusable UI and feature components
+- `lib/db/` for Dexie schema and initialization
 - `lib/repositories/` for persistence-facing data access
-- `lib/services/` for application behavior and scheduling
-- `lib/db/` for IndexedDB schema and initialization
+- `lib/services/` for document ingestion, summarization, reminders, dashboard logic, and notification workflows
 - `lib/i18n/` for bilingual translation infrastructure
-- `types/` for domain entities and view models
-
-## Current Product Priorities
-
-The most important product area in Phase 1 is the offline file manager. It is treated as a serious workspace feature rather than a placeholder uploader. That means:
-
-- local blob storage
-- meaningful metadata
-- notes and tagging support
-- list and grid modes
-- search, filtering, and sorting
-- honest preview support for realistic file types
+- `types/` for domain entities and summary artifacts
 
 ## Browser and Runtime Constraints
 
-Student Assistant Hub is offline-first, not a native desktop app. The implementation is honest about web platform limits:
+Student Assistant Hub remains honest about web platform limits:
 
-- browser notifications only work when permission is granted
-- reminder delivery cannot be guaranteed when the browser is fully closed
-- preview support depends on file type and browser capabilities
-- IndexedDB storage availability and quotas depend on the browser
+- IndexedDB storage quotas depend on the browser
+- browser notifications are helpful but not guaranteed when the app is closed
+- PDF extraction only works for text-based PDFs
+- scanned PDFs and image-only documents are not treated as supported summary inputs
+- summaries are local deterministic summaries, not cloud-grade language-model reasoning
 
 ## Project Structure
 
@@ -94,9 +111,9 @@ docs/               product, architecture, QA, and implementation reports
 lib/db/             Dexie schema and local database utilities
 lib/i18n/           translation dictionaries and i18n helpers
 lib/repositories/   local persistence repositories
-lib/services/       business logic, dashboard, reminder, and notification services
+lib/services/       document, summary, dashboard, reminder, and notification services
 lib/validation/     Zod schemas and form validation factories
-tests/              unit, component, and end-to-end tests
+tests/              unit, component, repository, and end-to-end tests
 types/              shared TypeScript domain types
 ```
 
@@ -110,16 +127,23 @@ types/              shared TypeScript domain types
 - [UI Pages](docs/ui-pages.md)
 - [Setup Guide](docs/setup.md)
 - [Phase 1 Implementation Report](docs/phase1-implementation-report.md)
+- [Phase 2 Implementation Report](docs/phase2-implementation-report.md)
 
 ## Local Development
 
-After installing dependencies, use:
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the app:
 
 ```bash
 npm run dev
 ```
 
-For verification:
+Verification:
 
 ```bash
 npm run lint
@@ -130,4 +154,4 @@ npm run test:e2e
 
 ## Status
 
-This repository contains the offline-first Phase 1 application and its supporting documentation. Future phases should build on this local-first foundation instead of replacing it.
+This repository contains the offline-first Phase 1 application and the Phase 2 local document-processing foundation. Future phases should reuse extracted text, chunks, concepts, and summary artifacts rather than replacing the local-first architecture.

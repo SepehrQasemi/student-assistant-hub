@@ -13,6 +13,13 @@ export function nowIso() {
   return new Date().toISOString();
 }
 
+export async function hashArrayBuffer(data: ArrayBuffer) {
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export function formatBytes(bytes: number) {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return "0 B";

@@ -2,14 +2,14 @@
 
 ## Overview
 
-Phase 1 data is stored locally in IndexedDB through Dexie. The schema is versioned to stay migration-friendly and future-sync-ready.
+Student Assistant Hub stores Phase 1 and Phase 2 data locally in IndexedDB through Dexie. The schema remains versioned so the application can evolve without collapsing into ad hoc persistence.
 
 All primary entities use:
 
 - `id`
 - `createdAt`
 - `updatedAt`
-- optional `deletedAt` where soft delete improves future sync compatibility
+- optional `deletedAt` where soft delete improves future migration or sync compatibility
 
 ## Controlled Values
 
@@ -30,6 +30,28 @@ All primary entities use:
 - `class`
 - `meeting`
 - `other`
+
+### Document Types
+
+- `plain_text`
+- `markdown`
+- `pdf_text`
+- `unsupported`
+
+### Extraction Statuses
+
+- `pending`
+- `success`
+- `failed`
+- `unsupported`
+- `empty`
+
+### Summary Modes
+
+- `quick_summary`
+- `structured_summary`
+- `study_notes`
+- `key_concepts`
 
 ## Table: courses
 
@@ -59,7 +81,7 @@ Organizes the academic workspace by subject or course.
 
 ### Purpose
 
-Stores local file metadata separately from raw blobs.
+Stores local file metadata separately from raw blobs and now carries source fingerprint data for Phase 2 stale detection.
 
 ### Main Fields
 
@@ -75,6 +97,9 @@ Stores local file metadata separately from raw blobs.
 - `tagIds`
 - `blobId`
 - `importedAt`
+- `previewKind`
+- `contentFingerprint`
+- `contentUpdatedAt`
 - `createdAt`
 - `updatedAt`
 - `deletedAt`
@@ -84,22 +109,30 @@ Stores local file metadata separately from raw blobs.
 - many files can belong to one course
 - one file references one local blob record
 - one file can link to many tags through `tagIds`
+- one file can have many extracted-document artifacts
+- one file can have many summaries
+
+### Notes and Constraints
+
+- `contentFingerprint` changes only when the source content changes
+- metadata-only edits must not invalidate summaries
 
 ## Table: fileBlobs
 
 ### Purpose
 
-Stores the raw file blob for offline use.
+Stores the raw file data for offline use.
 
 ### Main Fields
 
 - `id`
 - `fileId`
-- `blob`
+- `data`
+- `mimeType`
 - `createdAt`
 - `updatedAt`
 
-### Notes
+### Notes and Constraints
 
 - large-file support depends on browser IndexedDB quotas
 - metadata queries should avoid loading blobs unless required
@@ -156,7 +189,7 @@ Stores reminder scheduling rules for events.
 
 - `id`
 - `eventId`
-- `mode` (`offset` or `absolute`)
+- `mode`
 - `offsetMinutes`
 - `scheduledFor`
 - `snoozedUntil`
@@ -165,12 +198,6 @@ Stores reminder scheduling rules for events.
 - `createdAt`
 - `updatedAt`
 - `deletedAt`
-
-### Notes
-
-- one event can have multiple reminders
-- `scheduledFor` is stored explicitly for scheduling simplicity
-- offset-based reminders are recalculated when the event changes
 
 ## Table: notifications
 
@@ -191,10 +218,6 @@ Stores in-app notification records created by the reminder engine.
 - `createdAt`
 - `updatedAt`
 
-### Notes
-
-- in-app notifications remain available even if the browser notification was missed
-
 ## Table: settings
 
 ### Purpose
@@ -213,10 +236,114 @@ Stores app-level preferences and capability state.
 - `createdAt`
 - `updatedAt`
 
+## Table: extractedDocuments
+
+### Purpose
+
+Stores the result of attempting to extract text from a file for Phase 2 processing.
+
+### Main Fields
+
+- `id`
+- `fileId`
+- `sourceFingerprint`
+- `sourceUpdatedAt`
+- `documentType`
+- `status`
+- `rawText`
+- `normalizedText`
+- `characterCount`
+- `chunkCount`
+- `errorMessage`
+- `createdAt`
+- `updatedAt`
+
+### Relationships
+
+- many extracted-document records can belong to one file
+- one extracted-document record can be referenced by many summaries created from that same source fingerprint
+
+### Notes and Constraints
+
+- extraction state is explicit and persisted
+- `normalizedText` may be empty when status is `unsupported`, `failed`, or `empty`
+- an extracted-document record is tied to the file fingerprint used when it was created
+
+## Table: summaries
+
+### Purpose
+
+Stores generated local summary artifacts tied to a file and a specific extracted document version.
+
+### Main Fields
+
+- `id`
+- `fileId`
+- `extractedDocumentId`
+- `sourceFingerprint`
+- `mode`
+- `overview`
+- `createdAt`
+- `updatedAt`
+
+### Relationships
+
+- many summaries can belong to one file
+- many summaries can reference one extracted-document artifact
+- one summary can have many summary sections
+- one summary can have many concept artifacts
+
+### Notes and Constraints
+
+- summaries are never assumed current unless their `sourceFingerprint` matches the file fingerprint
+- summary history is preserved per file and per mode
+
+## Table: summarySections
+
+### Purpose
+
+Stores sectioned summary output separately from the summary header record.
+
+### Main Fields
+
+- `id`
+- `summaryId`
+- `sectionKey`
+- `order`
+- `content`
+- `createdAt`
+- `updatedAt`
+
+### Notes and Constraints
+
+- `sectionKey` is a stable key rendered through the i18n layer rather than a stored translated heading
+- this allows the UI language to change without rewriting stored artifacts
+
+## Table: summaryConcepts
+
+### Purpose
+
+Stores extracted important terms or concepts associated with a summary.
+
+### Main Fields
+
+- `id`
+- `summaryId`
+- `term`
+- `score`
+- `occurrences`
+- `createdAt`
+- `updatedAt`
+
+### Notes and Constraints
+
+- concept terms must come from the source text
+- scores are heuristic weights used for ordering, not confidence guarantees
+
 ## Future Extension Notes
 
-The local model is designed to support later phases without breaking Phase 1:
+The Phase 2 model is designed so later phases can build on it:
 
-- sync metadata can be added later
-- AI tables can remain additive
-- repository interfaces can gain remote implementations while retaining the same UI contracts
+- quiz generation can reuse extracted text and deterministic chunking
+- quiz workflows can reuse concept artifacts
+- export/sync can treat extracted documents and summaries as additive local artifacts

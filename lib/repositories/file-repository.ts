@@ -1,5 +1,5 @@
 import { db } from "@/lib/db/app-db";
-import { createId, getFileExtension, nowIso } from "@/lib/utils";
+import { createId, getFileExtension, hashArrayBuffer, nowIso } from "@/lib/utils";
 import type { FileCategory, FilePreviewKind, StoredFileRecord, FileBlobRecord } from "@/types/entities";
 
 export interface FileImportInput {
@@ -58,6 +58,8 @@ export class FileRepository {
         const blobId = createId();
         const extension = getFileExtension(input.file.name);
         const previewKind = resolvePreviewKind(input.file.type, extension);
+        const buffer = await input.file.arrayBuffer();
+        const contentFingerprint = await hashArrayBuffer(buffer);
 
         const fileRecord: StoredFileRecord = {
           id: fileId,
@@ -73,6 +75,8 @@ export class FileRepository {
           blobId,
           importedAt,
           previewKind,
+          contentFingerprint,
+          contentUpdatedAt: importedAt,
           createdAt: importedAt,
           updatedAt: importedAt,
           deletedAt: null,
@@ -81,7 +85,7 @@ export class FileRepository {
         const blobRecord: FileBlobRecord = {
           id: blobId,
           fileId,
-          data: await input.file.arrayBuffer(),
+          data: buffer,
           mimeType: input.file.type || "application/octet-stream",
           createdAt: importedAt,
           updatedAt: importedAt,
@@ -122,6 +126,35 @@ export class FileRepository {
     return new Blob([blobRecord.data], { type: blobRecord.mimeType });
   }
 
+  async ensureFingerprint(id: string) {
+    const existing = await db.files.get(id);
+
+    if (!existing) {
+      throw new Error(`File ${id} not found`);
+    }
+
+    if (existing.contentFingerprint) {
+      return existing;
+    }
+
+    const blobRecord = await db.fileBlobs.where("fileId").equals(id).first();
+
+    if (!blobRecord) {
+      throw new Error(`Blob for file ${id} not found`);
+    }
+
+    const contentFingerprint = await hashArrayBuffer(blobRecord.data);
+    const nextFile: StoredFileRecord = {
+      ...existing,
+      contentFingerprint,
+      contentUpdatedAt: existing.contentUpdatedAt || existing.updatedAt,
+      updatedAt: nowIso(),
+    };
+
+    await db.files.put(nextFile);
+    return nextFile;
+  }
+
   async updateMetadata(id: string, update: FileMetadataUpdate) {
     const existing = await db.files.get(id);
 
@@ -136,6 +169,52 @@ export class FileRepository {
     };
 
     await db.files.put(nextFile);
+    return nextFile;
+  }
+
+  async replaceSource(id: string, nextSource: File) {
+    const existing = await db.files.get(id);
+
+    if (!existing) {
+      throw new Error(`File ${id} not found`);
+    }
+
+    const blobRecord = await db.fileBlobs.where("fileId").equals(id).first();
+
+    if (!blobRecord) {
+      throw new Error(`Blob for file ${id} not found`);
+    }
+
+    const timestamp = nowIso();
+    const extension = getFileExtension(nextSource.name);
+    const previewKind = resolvePreviewKind(nextSource.type, extension);
+    const buffer = await nextSource.arrayBuffer();
+    const contentFingerprint = await hashArrayBuffer(buffer);
+
+    const nextFile: StoredFileRecord = {
+      ...existing,
+      originalName: nextSource.name,
+      mimeType: nextSource.type || "application/octet-stream",
+      extension,
+      sizeBytes: nextSource.size,
+      previewKind,
+      contentFingerprint,
+      contentUpdatedAt: timestamp,
+      updatedAt: timestamp,
+    };
+
+    const nextBlob: FileBlobRecord = {
+      ...blobRecord,
+      data: buffer,
+      mimeType: nextFile.mimeType,
+      updatedAt: timestamp,
+    };
+
+    await db.transaction("rw", db.files, db.fileBlobs, async () => {
+      await db.files.put(nextFile);
+      await db.fileBlobs.put(nextBlob);
+    });
+
     return nextFile;
   }
 

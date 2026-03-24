@@ -4,25 +4,17 @@
 
 ### Purpose
 
-Redirect entry route to the working dashboard while keeping a stable home URL.
+Redirect entry traffic to the active dashboard while keeping a stable home URL.
 
 ### Primary Components
 
 - redirect or lightweight shell handoff
 
-### Key User Actions
-
-- open the application
-
-### Future Enhancements
-
-- optional landing or onboarding screen if export/sync features are added later
-
 ## `/dashboard`
 
 ### Purpose
 
-Give the student an immediate overview of workload, recent activity, and upcoming reminders.
+Give the student an immediate overview of workload, recent activity, reminders, and recent file activity.
 
 ### Primary Components
 
@@ -34,22 +26,15 @@ Give the student an immediate overview of workload, recent activity, and upcomin
 - this-week events panel
 - quick actions
 
-### Key User Actions
+### Future Enhancements
 
-- understand what matters now
-- navigate quickly into files, courses, calendar, and settings
-
-### Empty States
-
-- no courses yet
-- no files imported yet
-- no upcoming events yet
+- highlight recently generated summaries if they prove useful enough for the dashboard
 
 ## `/courses`
 
 ### Purpose
 
-Manage courses locally and provide the academic structure that files and events can attach to.
+Manage courses locally and provide the academic structure that files and events attach to.
 
 ### Primary Components
 
@@ -58,21 +43,11 @@ Manage courses locally and provide the academic structure that files and events 
 - delete confirmation
 - responsive card layout
 
-### Key User Actions
-
-- create course
-- edit course
-- delete course
-
-### Empty States
-
-- guided message explaining why courses matter for file and calendar organization
-
 ## `/files`
 
 ### Purpose
 
-Provide the core offline file workspace for importing, organizing, and previewing academic files.
+Provide the core offline file workspace for importing, organizing, previewing, and now summarizing supported academic files.
 
 ### Primary Components
 
@@ -82,21 +57,31 @@ Provide the core offline file workspace for importing, organizing, and previewin
 - file table or file cards
 - file detail dialog
 - preview panel
+- summary tab or summary viewer inside the file detail flow
+- summary history list
 
 ### Key User Actions
 
 - import one or multiple files
 - assign files to courses
 - rename metadata
-- add notes
-- tag files
-- filter and sort
-- delete file
+- add notes and tags
+- replace a file source while preserving the record
+- run a summary mode on a supported file
+- inspect extraction status
+- revisit prior summaries
+- see stale summary warnings
 
 ### Empty States
 
 - no files imported yet
 - filters produce no matching files
+- selected file has no summaries yet
+- selected file is unsupported for summarization
+
+### Future Enhancements
+
+- dedicated summary comparison views if summary history becomes dense
 
 ## `/calendar`
 
@@ -112,19 +97,6 @@ Manage local academic planning through multiple calendar views and event filters
 - create/edit event dialog
 - event detail side panel or dialog
 
-### Key User Actions
-
-- create event
-- edit event
-- delete event
-- assign event to course
-- attach reminders
-- switch views
-
-### Empty States
-
-- no events created yet
-
 ## `/settings`
 
 ### Purpose
@@ -139,13 +111,6 @@ Manage local app preferences and capability settings.
 - storage information section
 - app information section
 
-### Key User Actions
+### Future Enhancements
 
-- switch language
-- request notification permission
-- choose default calendar view
-- review local storage information
-
-### Empty States
-
-- not applicable beyond unset preferences
+- export and backup settings once local portability work begins

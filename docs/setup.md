@@ -2,7 +2,12 @@
 
 ## Current Repository State
 
-This repository now targets a fully local Phase 1 implementation. The application does not require any backend service, cloud storage, or authentication provider to run.
+This repository targets an offline-first application with:
+
+- Phase 1 local workspace features already implemented
+- Phase 2 local document extraction and summarization implemented for supported formats
+
+The application does not require any backend service, cloud storage, or remote inference provider to run.
 
 ## Required Tools
 
@@ -33,7 +38,7 @@ npx playwright install
 
 3. Open the local app in your browser.
 
-The workspace stores application data in IndexedDB. No additional service is required.
+The workspace stores application data in IndexedDB. No backend or extra local service is required.
 
 ## Test Commands
 
@@ -63,16 +68,24 @@ npm run build
 
 ## Environment Variables
 
-Phase 1 does not require backend credentials.
+The application remains backend-free in Phase 2.
 
-The `.env.example` file is intentionally minimal and exists only for optional display-level configuration. The app should still run without any custom environment file.
+The `.env.example` file remains intentionally minimal and exists only for optional display-level configuration. The app should run without any custom environment file.
 
 ## Offline-First Expectations
 
 - all primary application data is stored in IndexedDB
+- extracted text and summaries are also stored locally
 - the app remains usable without cloud services
 - browser storage quotas still apply
-- clearing site data will remove the local workspace unless backup/export is added in a future phase
+- clearing site data removes the local workspace, extracted documents, and summary history
+
+## Document Processing Limits
+
+- summarization only supports plain text, markdown, and text-based PDFs
+- scanned or image-only PDFs are not treated as supported summary inputs
+- extraction quality depends on the structure embedded in the source file
+- local summaries are heuristic and deterministic, not cloud-model reasoning
 
 ## Notifications
 
@@ -86,4 +99,4 @@ They are helpful but not guaranteed like native background notifications.
 
 ## Future Deployment Direction
 
-The app can be deployed like a normal Next.js application later, but Phase 1 does not depend on any hosted backend. The main persistence boundary remains local Dexie repositories.
+The app can be deployed like a normal Next.js application later, but it does not depend on any hosted backend. The main persistence boundary remains local Dexie repositories and Phase 2 artifacts are stored locally beside existing workspace data.

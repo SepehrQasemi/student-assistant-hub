@@ -6,8 +6,10 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { FileSummaryPanel } from "@/components/files/file-summary-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useObjectUrl } from "@/lib/hooks/use-object-url";
 import { useI18n } from "@/lib/providers/i18n-provider";
@@ -42,11 +45,15 @@ export function FileDetailDialog({
 }) {
   const { t } = useI18n();
   const [isSaving, setIsSaving] = useState(false);
+  const [isReplacingSource, setIsReplacingSource] = useState(false);
+  const [replacementFile, setReplacementFile] = useState<File | null>(null);
   const [textPreview, setTextPreview] = useState("");
   const schema = createFileMetadataSchema(t("validation.required"));
   type FileMetadataValues = z.infer<typeof schema>;
 
-  const blob = useLiveQuery(() => (file ? fileRepository.getBlob(file.id) : Promise.resolve(undefined)), [file?.id], undefined);
+  const liveFile = useLiveQuery(() => (file ? fileRepository.getById(file.id) : Promise.resolve(undefined)), [file?.id], file ?? undefined);
+  const effectiveFile = liveFile ?? file;
+  const blob = useLiveQuery(() => (effectiveFile ? fileRepository.getBlob(effectiveFile.id) : Promise.resolve(undefined)), [effectiveFile?.id, effectiveFile?.updatedAt], undefined);
   const objectUrl = useObjectUrl(blob);
 
   const form = useForm<FileMetadataValues>({
@@ -64,25 +71,25 @@ export function FileDetailDialog({
 
   useEffect(() => {
     form.reset({
-      name: file?.name ?? "",
-      courseId: file?.courseId ?? null,
-      category: file?.category ?? "lecture_note",
-      notes: file?.notes ?? "",
-      tags: file?.tagIds.map((tagId) => tagLabelMap.get(tagId)).filter(Boolean).join(", ") ?? "",
+      name: effectiveFile?.name ?? "",
+      courseId: effectiveFile?.courseId ?? null,
+      category: effectiveFile?.category ?? "lecture_note",
+      notes: effectiveFile?.notes ?? "",
+      tags: effectiveFile?.tagIds.map((tagId) => tagLabelMap.get(tagId)).filter(Boolean).join(", ") ?? "",
     });
-  }, [file, form, tagLabelMap]);
+  }, [effectiveFile, form, tagLabelMap]);
 
   useEffect(() => {
-    if (!blob || file?.previewKind !== "text") {
+    if (!blob || effectiveFile?.previewKind !== "text") {
       setTextPreview("");
       return;
     }
 
     void blob.text().then((text) => setTextPreview(text.slice(0, 4000)));
-  }, [blob, file?.previewKind]);
+  }, [blob, effectiveFile?.previewKind]);
 
   async function handleSave(values: FileMetadataValues) {
-    if (!file) {
+    if (!effectiveFile) {
       return;
     }
 
@@ -90,7 +97,7 @@ export function FileDetailDialog({
 
     try {
       const resolvedTags = await tagRepository.findOrCreateMany(values.tags.split(","));
-      await fileRepository.updateMetadata(file.id, {
+      await fileRepository.updateMetadata(effectiveFile.id, {
         name: values.name,
         courseId: values.courseId,
         category: values.category,
@@ -104,7 +111,7 @@ export function FileDetailDialog({
   }
 
   async function handleDelete() {
-    if (!file) {
+    if (!effectiveFile) {
       return;
     }
 
@@ -112,116 +119,165 @@ export function FileDetailDialog({
       return;
     }
 
-    await fileRepository.remove(file.id);
+    await fileRepository.remove(effectiveFile.id);
     onOpenChange(false);
+  }
+
+  async function handleReplaceSource() {
+    if (!effectiveFile || !replacementFile) {
+      return;
+    }
+
+    setIsReplacingSource(true);
+
+    try {
+      await fileRepository.replaceSource(effectiveFile.id, replacementFile);
+      setReplacementFile(null);
+    } finally {
+      setIsReplacingSource(false);
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(96vw,1000px)]">
+      <DialogContent className="w-[min(96vw,1100px)]">
         <DialogHeader>
           <DialogTitle>{t("files.fileDetails")}</DialogTitle>
-          <DialogDescription>{file?.originalName}</DialogDescription>
+          <DialogDescription>{effectiveFile?.originalName}</DialogDescription>
         </DialogHeader>
 
-        {!file ? null : (
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="accent">{t(`categories.${file.category}`)}</Badge>
-                <Badge variant="muted">{file.mimeType}</Badge>
-                <Badge variant="muted">{formatBytes(file.sizeBytes)}</Badge>
-              </div>
-              {file.previewKind === "pdf" && objectUrl ? (
-                <iframe title={file.name} src={objectUrl} className="min-h-[440px] w-full rounded-[20px] border border-slate-200 bg-white" />
-              ) : null}
-              {file.previewKind === "image" && objectUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={objectUrl} alt={file.name} className="max-h-[480px] w-full rounded-[20px] border border-slate-200 object-contain bg-white" />
-              ) : null}
-              {file.previewKind === "text" ? (
-                <pre className="max-h-[480px] overflow-auto rounded-[20px] border border-slate-200 bg-white p-4 text-sm text-slate-700">
-                  {textPreview}
-                </pre>
-              ) : null}
-              {file.previewKind === "unsupported" ? (
-                <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600">
-                  <p>{t("files.unsupportedDescription")}</p>
-                  <p className="mt-2">{t("common.unsupportedPreview")}</p>
+        {!effectiveFile ? null : (
+          <Tabs defaultValue="details" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="details">{t("common.details")}</TabsTrigger>
+              <TabsTrigger value="summaries">{t("summaries.title")}</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="details" className="space-y-4">
+              <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="accent">{t(`categories.${effectiveFile.category}`)}</Badge>
+                    <Badge variant="muted">{effectiveFile.mimeType}</Badge>
+                    <Badge variant="muted">{formatBytes(effectiveFile.sizeBytes)}</Badge>
+                  </div>
+                  {effectiveFile.previewKind === "pdf" && objectUrl ? (
+                    <iframe title={effectiveFile.name} src={objectUrl} className="min-h-[440px] w-full rounded-[20px] border border-slate-200 bg-white" />
+                  ) : null}
+                  {effectiveFile.previewKind === "image" && objectUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={objectUrl} alt={effectiveFile.name} className="max-h-[480px] w-full rounded-[20px] border border-slate-200 object-contain bg-white" />
+                  ) : null}
+                  {effectiveFile.previewKind === "text" ? (
+                    <pre className="max-h-[480px] overflow-auto rounded-[20px] border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                      {textPreview}
+                    </pre>
+                  ) : null}
+                  {effectiveFile.previewKind === "unsupported" ? (
+                    <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600">
+                      <p>{t("files.unsupportedDescription")}</p>
+                      <p className="mt-2">{t("common.unsupportedPreview")}</p>
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
-            </div>
 
-            <form className="space-y-4" onSubmit={form.handleSubmit(handleSave)}>
-              <div className="space-y-2">
-                <Label htmlFor="file-name">{t("common.name")}</Label>
-                <Input id="file-name" {...form.register("name")} />
+                <form className="space-y-4" onSubmit={form.handleSubmit(handleSave)}>
+                  <div className="space-y-2">
+                    <Label htmlFor="file-name">{t("common.name")}</Label>
+                    <Input id="file-name" {...form.register("name")} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t("files.assignCourse")}</Label>
+                    <Select
+                      value={form.watch("courseId") ?? "none"}
+                      onValueChange={(value) => form.setValue("courseId", value === "none" ? null : value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t("common.all")}</SelectItem>
+                        {courses.map((course) => (
+                          <SelectItem key={course.id} value={course.id}>
+                            {course.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t("files.filterByCategory")}</Label>
+                    <Select value={form.watch("category")} onValueChange={(value) => form.setValue("category", value as FileMetadataValues["category"])}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["lecture_note", "slide", "assignment", "exam_material", "personal", "other"].map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {t(`categories.${category}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="file-tags">{t("common.tags")}</Label>
+                    <Input id="file-tags" {...form.register("tags")} placeholder={t("files.tagPlaceholder")} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="file-notes">{t("files.fileNotes")}</Label>
+                    <Textarea id="file-notes" {...form.register("notes")} />
+                  </div>
+
+                  <Card>
+                    <CardContent className="space-y-3 p-4">
+                      <div className="space-y-1 text-sm text-slate-600">
+                        <p>{t("files.fileType")}: {effectiveFile.mimeType}</p>
+                        <p>{t("files.importedOn")}: {new Date(effectiveFile.importedAt).toLocaleString()}</p>
+                        <p>{t("summaries.lastSourceChange")}: {new Date(effectiveFile.contentUpdatedAt).toLocaleString()}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="space-y-4 p-4">
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{t("summaries.replaceSource")}</p>
+                        <p className="mt-1 text-sm text-slate-600">{t("summaries.replaceSourceDescription")}</p>
+                      </div>
+                      <Input type="file" onChange={(event) => setReplacementFile(event.target.files?.[0] ?? null)} />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button type="button" variant="secondary" onClick={() => void handleReplaceSource()} disabled={!replacementFile || isReplacingSource}>
+                          {isReplacingSource ? t("common.loading") : t("summaries.replaceSource")}
+                        </Button>
+                        {replacementFile ? <Badge variant="muted">{replacementFile.name}</Badge> : null}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <DialogFooter>
+                    <Button type="button" variant="danger" onClick={() => void handleDelete()}>
+                      {t("common.delete")}
+                    </Button>
+                    <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                      {t("common.close")}
+                    </Button>
+                    <Button type="submit" disabled={isSaving}>
+                      {isSaving ? t("common.loading") : t("common.save")}
+                    </Button>
+                  </DialogFooter>
+                </form>
               </div>
+            </TabsContent>
 
-              <div className="space-y-2">
-                <Label>{t("files.assignCourse")}</Label>
-                <Select
-                  value={form.watch("courseId") ?? "none"}
-                  onValueChange={(value) => form.setValue("courseId", value === "none" ? null : value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{t("common.all")}</SelectItem>
-                    {courses.map((course) => (
-                      <SelectItem key={course.id} value={course.id}>
-                        {course.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t("files.filterByCategory")}</Label>
-                <Select value={form.watch("category")} onValueChange={(value) => form.setValue("category", value as FileMetadataValues["category"])}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["lecture_note", "slide", "assignment", "exam_material", "personal", "other"].map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {t(`categories.${category}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="file-tags">{t("common.tags")}</Label>
-                <Input id="file-tags" {...form.register("tags")} placeholder={t("files.tagPlaceholder")} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="file-notes">{t("files.fileNotes")}</Label>
-                <Textarea id="file-notes" {...form.register("notes")} />
-              </div>
-
-              <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                <p>{t("files.fileType")}: {file.mimeType}</p>
-                <p>{t("files.importedOn")}: {new Date(file.importedAt).toLocaleString()}</p>
-              </div>
-
-              <DialogFooter>
-                <Button type="button" variant="danger" onClick={() => void handleDelete()}>
-                  {t("common.delete")}
-                </Button>
-                <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-                  {t("common.close")}
-                </Button>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? t("common.loading") : t("common.save")}
-                </Button>
-              </DialogFooter>
-            </form>
-          </div>
+            <TabsContent value="summaries">
+              <FileSummaryPanel file={effectiveFile} />
+            </TabsContent>
+          </Tabs>
         )}
       </DialogContent>
     </Dialog>
