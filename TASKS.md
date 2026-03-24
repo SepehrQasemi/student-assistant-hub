@@ -4,21 +4,22 @@
 
 - [x] Phase 1 offline-first workspace
 - [x] Phase 2 local document extraction and summarization
+- [x] Phase 3 local quiz generation, execution, scoring, review, and history
 
-## Phase 2 Follow-Up Hardening
+## Phase 3 Follow-Up Hardening
 
-- [ ] Add optional export of extracted documents and summary history.
-- [ ] Add an explicit regenerate action for users who want a fresh artifact even when the current fingerprint and mode already have a stored summary.
-- [ ] Add richer PDF extraction diagnostics for malformed but text-based PDFs.
-- [ ] Add denser history controls for files with many summaries.
-- [ ] Add summary cleanup tools for large local workspaces.
+- [ ] Add manual regenerate controls for quizzes when users want a fresh artifact even if the current fingerprint and options already match a stored quiz.
+- [ ] Add richer diagnostics for quiz generation failures caused by low-signal or sparse source material.
+- [ ] Add broader quality fixtures for text-based PDF quiz generation.
+- [ ] Add denser attempt-comparison controls when a quiz accumulates many retries.
+- [ ] Add optional export of quiz history and attempt results.
 
-## Phase 3 Preparation
+## Phase 4 Preparation
 
-- [ ] Reuse extracted text and chunking artifacts for quiz generation.
-- [ ] Define question templates that consume key concepts and summary sections.
-- [ ] Persist quiz drafts without mutating summary artifacts.
-- [ ] Add QA datasets for validating quiz quality against deterministic extracted inputs.
+- [ ] Use quiz attempt history to prioritize what should be reviewed next.
+- [ ] Connect summaries, quizzes, and calendar deadlines more explicitly inside the study workflow.
+- [ ] Design study-session orchestration around persisted summaries, quizzes, and attempts.
+- [ ] Add QA datasets for validating future review recommendations against deterministic local inputs.
 
 ## Future Platform Work
 

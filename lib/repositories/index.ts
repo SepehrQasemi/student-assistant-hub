@@ -3,6 +3,8 @@ export { eventRepository } from "@/lib/repositories/event-repository";
 export { extractedDocumentRepository } from "@/lib/repositories/extracted-document-repository";
 export { fileRepository } from "@/lib/repositories/file-repository";
 export { notificationRepository } from "@/lib/repositories/notification-repository";
+export { quizAttemptRepository } from "@/lib/repositories/quiz-attempt-repository";
+export { quizRepository } from "@/lib/repositories/quiz-repository";
 export { reminderRepository } from "@/lib/repositories/reminder-repository";
 export { settingsRepository } from "@/lib/repositories/settings-repository";
 export { summaryRepository } from "@/lib/repositories/summary-repository";

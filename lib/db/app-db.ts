@@ -9,6 +9,10 @@ import type {
   FileBlobRecord,
   FileTag,
   Reminder,
+  QuizAnswer,
+  QuizAttempt,
+  QuizQuestion,
+  QuizRecord,
   SummaryConcept,
   SummaryRecord,
   SummarySection,
@@ -28,6 +32,10 @@ export class StudentAssistantDb extends Dexie {
   summaries!: Table<SummaryRecord, string>;
   summarySections!: Table<SummarySection, string>;
   summaryConcepts!: Table<SummaryConcept, string>;
+  quizzes!: Table<QuizRecord, string>;
+  quizQuestions!: Table<QuizQuestion, string>;
+  quizAttempts!: Table<QuizAttempt, string>;
+  quizAnswers!: Table<QuizAnswer, string>;
 
   constructor() {
     super("student-assistant-hub");
@@ -68,6 +76,27 @@ export class StudentAssistantDb extends Dexie {
             file.contentUpdatedAt = file.contentUpdatedAt || file.updatedAt || file.importedAt;
           });
       });
+
+    this.version(3).stores({
+      courses: "id, name, code, semester, updatedAt, deletedAt",
+      files:
+        "id, name, originalName, courseId, category, mimeType, extension, importedAt, updatedAt, contentUpdatedAt, contentFingerprint, deletedAt, *tagIds",
+      fileBlobs: "id, fileId, updatedAt",
+      tags: "id, label, updatedAt, deletedAt",
+      events: "id, title, type, courseId, startsAt, endsAt, status, updatedAt, deletedAt",
+      reminders: "id, eventId, mode, scheduledFor, snoozedUntil, status, updatedAt, deletedAt",
+      notifications: "id, reminderId, eventId, status, scheduledFor, createdAt, updatedAt, [reminderId+scheduledFor]",
+      settings: "key, updatedAt",
+      extractedDocuments: "id, fileId, sourceFingerprint, sourceUpdatedAt, documentType, status, updatedAt, [fileId+sourceFingerprint]",
+      summaries: "id, fileId, extractedDocumentId, sourceFingerprint, mode, createdAt, [fileId+createdAt], [fileId+mode]",
+      summarySections: "id, summaryId, sectionKey, order",
+      summaryConcepts: "id, summaryId, term, score",
+      quizzes:
+        "id, sourceFileId, extractedDocumentId, sourceFingerprint, mode, focusMode, questionCount, createdAt, [sourceFileId+createdAt], [sourceFileId+sourceFingerprint], [sourceFileId+mode]",
+      quizQuestions: "id, quizId, type, order, focusTag",
+      quizAttempts: "id, quizId, completedAt, startedAt, score, [quizId+startedAt], [quizId+completedAt]",
+      quizAnswers: "id, attemptId, questionId, isCorrect, evaluatedAt, [attemptId+questionId]",
+    });
   }
 }
 

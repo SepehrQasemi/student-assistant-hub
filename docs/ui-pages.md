@@ -14,7 +14,7 @@ Redirect entry traffic to the active dashboard while keeping a stable home URL.
 
 ### Purpose
 
-Give the student an immediate overview of workload, recent activity, reminders, and recent file activity.
+Give the student an immediate overview of workload, reminders, upcoming academic events, recent files, and useful navigation shortcuts.
 
 ### Primary Components
 
@@ -28,7 +28,7 @@ Give the student an immediate overview of workload, recent activity, reminders, 
 
 ### Future Enhancements
 
-- highlight recently generated summaries if they prove useful enough for the dashboard
+- highlight recent quiz activity if that proves useful enough for the dashboard
 
 ## `/courses`
 
@@ -47,7 +47,7 @@ Manage courses locally and provide the academic structure that files and events 
 
 ### Purpose
 
-Provide the core offline file workspace for importing, organizing, previewing, and now summarizing supported academic files.
+Provide the core offline file workspace for importing, organizing, previewing, summarizing, and now generating quizzes from supported academic files.
 
 ### Primary Components
 
@@ -57,8 +57,10 @@ Provide the core offline file workspace for importing, organizing, previewing, a
 - file table or file cards
 - file detail dialog
 - preview panel
-- summary tab or summary viewer inside the file detail flow
+- summary tab inside the file detail flow
+- quiz tab inside the file detail flow
 - summary history list
+- quiz history list
 
 ### Key User Actions
 
@@ -68,20 +70,58 @@ Provide the core offline file workspace for importing, organizing, previewing, a
 - add notes and tags
 - replace a file source while preserving the record
 - run a summary mode on a supported file
-- inspect extraction status
-- revisit prior summaries
-- see stale summary warnings
+- generate a quiz from a supported file
+- inspect extraction state
+- revisit prior summaries and quizzes
+- see stale summary and stale quiz warnings
 
 ### Empty States
 
 - no files imported yet
 - filters produce no matching files
 - selected file has no summaries yet
-- selected file is unsupported for summarization
+- selected file has no quizzes yet
+- selected file is unsupported for summarization or quiz generation
 
 ### Future Enhancements
 
-- dedicated summary comparison views if summary history becomes dense
+- dedicated summary or quiz comparison views if history becomes dense
+
+## `/quizzes/[quizId]`
+
+### Purpose
+
+Provide a focused quiz-taking and review surface without overloading the file detail dialog.
+
+### Primary Components
+
+- quiz overview card
+- start-quiz action
+- question player
+- answer controls
+- results and review cards
+- attempt history panel
+- stale quiz badge
+
+### Key User Actions
+
+- start a persisted quiz
+- answer questions sequentially
+- submit a quiz
+- review score and explanations
+- reopen earlier attempts
+- retry the same quiz
+- return to the files workspace
+
+### Empty States
+
+- missing quiz
+- missing attempt
+- loading persisted review state
+
+### Future Enhancements
+
+- richer attempt comparison if history becomes dense
 
 ## `/calendar`
 

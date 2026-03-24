@@ -54,42 +54,70 @@ Add a real local document-understanding layer for supported files without cloud 
 - M5: integrate summaries into the file UX and complete bilingual states
 - M6: QA, tests, and Phase 2 implementation report
 
-### Rationale
-
-Before quiz generation exists, the product needs reusable extracted text and summary artifacts that stay local, testable, and bounded by honest browser behavior.
-
-## Phase 3: Quiz Generation
+## Phase 3: Local Quiz Generation, Execution, and Review
 
 ### Goal
 
-Turn extracted text, summary sections, and concept artifacts into local study questions.
+Turn extracted text, summaries, and concept artifacts into local study quizzes that can be taken, scored, reviewed, and revisited later.
 
 ### Scope
 
-- question generation from extracted text and summaries
-- local quiz artifact persistence
-- quiz creation controls linked to files
-- reuse of Phase 2 chunking and concept infrastructure
+- question source selection from extracted text and summary artifacts
+- deterministic local quiz generation for one file at a time
+- supported question types:
+  - `multiple_choice`
+  - `true_false`
+- supported quiz modes:
+  - `multiple_choice`
+  - `true_false`
+  - `mixed`
+- quiz generation options:
+  - question count
+  - mode
+  - focus mode
+  - include explanations
+- quiz persistence
+- question persistence
+- attempt persistence
+- answer persistence
+- score calculation and per-question review
+- quiz history by file
+- stale quiz detection using source fingerprints
+- bilingual UI integration for quiz creation, play, review, and history
+- tests for services, repositories, UI, and end-to-end quiz flows
+
+### Milestones
+
+- M1: update docs and extend the local data model for quizzes
+- M2: implement quiz source selection, candidate generation, and distractor logic
+- M3: implement question generation for multiple-choice and true/false
+- M4: implement quiz, question, attempt, and answer persistence
+- M5: implement quiz player, review route, history, and stale warnings
+- M6: complete bilingual coverage, tests, QA, and Phase 3 implementation report
 
 ### Rationale
 
-Quiz generation should build on a stable document-processing pipeline rather than bypass it.
+Quiz generation should build on a stable document-processing pipeline rather than bypass it. Reusing extracted text, chunks, summaries, and concepts keeps the study workflow local, explainable, and testable.
 
-## Phase 4: Quiz Interaction and Extended Study Workflow
+## Phase 4: Extended Study Workflow
 
 ### Goal
 
-Extend the workspace from content preparation into active study sessions.
+Extend the workspace from local quiz review into broader study-session workflows without abandoning the offline-first architecture.
 
-### Scope
+### Candidate Scope
 
-- quiz interaction workflows
-- answer review and iteration loops
-- richer study-session navigation
-- longer-term study workflow extensions
+- deeper review prioritization based on prior attempts
+- richer transitions between summaries, quizzes, and calendar deadlines
+- more deliberate study-session orchestration around existing local artifacts
+- export or portability improvements for local study data
+
+### Rationale
+
+Phase 4 should build on persisted summaries, quizzes, and attempt history instead of replacing them with a separate platform.
 
 ## Rationale for Ordering
 
 1. The offline workspace had to be stable before document processing was added.
-2. Document extraction and summarization are prerequisites for reuse in quiz generation.
-3. Quiz interaction should come only after the product can produce durable study artifacts locally.
+2. Document extraction and summarization were prerequisites for grounded quiz generation.
+3. Quiz generation, execution, and review needed durable local artifacts before broader study orchestration could be added.

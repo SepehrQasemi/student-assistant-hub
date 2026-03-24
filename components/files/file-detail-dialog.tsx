@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { FileSummaryPanel } from "@/components/files/file-summary-panel";
+import { FileQuizPanel } from "@/components/files/file-quiz-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -151,6 +152,7 @@ export function FileDetailDialog({
             <TabsList>
               <TabsTrigger value="details">{t("common.details")}</TabsTrigger>
               <TabsTrigger value="summaries">{t("summaries.title")}</TabsTrigger>
+              <TabsTrigger value="quizzes">{t("quizzes.title")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="space-y-4">
@@ -276,6 +278,10 @@ export function FileDetailDialog({
 
             <TabsContent value="summaries">
               <FileSummaryPanel file={effectiveFile} />
+            </TabsContent>
+
+            <TabsContent value="quizzes">
+              <FileQuizPanel file={effectiveFile} />
             </TabsContent>
           </Tabs>
         )}

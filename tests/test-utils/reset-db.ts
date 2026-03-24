@@ -16,6 +16,10 @@ export async function resetDb() {
       db.summaries,
       db.summarySections,
       db.summaryConcepts,
+      db.quizzes,
+      db.quizQuestions,
+      db.quizAttempts,
+      db.quizAnswers,
     ],
     async () => {
     await Promise.all([
@@ -31,6 +35,10 @@ export async function resetDb() {
       db.summaries.clear(),
       db.summarySections.clear(),
       db.summaryConcepts.clear(),
+      db.quizzes.clear(),
+      db.quizQuestions.clear(),
+      db.quizAttempts.clear(),
+      db.quizAnswers.clear(),
     ]);
     },
   );

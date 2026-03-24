@@ -28,30 +28,61 @@
 8. The summary repository stores the summary, sections, and concept records locally.
 9. The user sees the resulting summary and can reopen it later from history.
 
-## Handle Unsupported or Failed Extraction
+## Generate a Quiz for a Supported File
 
-1. The user attempts to summarize a file.
-2. The ingestion service detects an unsupported format or fails to extract usable text.
-3. The extracted-document repository stores an explicit status such as `unsupported`, `failed`, or `empty`.
-4. The UI shows a specific message describing what happened.
-5. The user is not shown a fake summary for unsupported or broken input.
+1. The user opens a file from `/files`.
+2. The user switches to the quiz area in the file detail flow.
+3. The app checks the file type and the current extracted-document state for the active file fingerprint.
+4. The user selects quiz options:
+   - question count
+   - mode
+   - focus mode
+   - include explanations
+5. The quiz source service loads extracted text and supporting summary artifacts for the same file version.
+6. Candidate selection chooses strong concept and sentence targets from the source material.
+7. The quiz generator produces deterministic multiple-choice and or true/false questions.
+8. The quiz repository stores the quiz and question rows locally.
+9. The user can start the quiz immediately or reopen it later from file history.
 
-## Revisit Summary History
+## Complete a Quiz and Review Results
 
-1. The user opens a file that already has summary history.
-2. The summary view lists previous summaries by mode and creation time.
-3. The user selects an older summary.
-4. The UI renders the stored summary sections and concept list from local persistence.
-5. The UI indicates whether the selected summary is current or stale relative to the current file fingerprint.
+1. The user opens a generated quiz from the file detail dialog.
+2. The app routes the user to `/quizzes/[quizId]`.
+3. The user starts a new attempt.
+4. The user answers questions sequentially inside the quiz player.
+5. The quiz evaluator normalizes answers and checks them against persisted correct answers.
+6. The attempt repository stores the final attempt and answer rows.
+7. The user sees:
+   - score
+   - correct count
+   - incorrect count
+   - their answer
+   - the correct answer
+   - explanation when the quiz was generated with explanations enabled
 
-## Detect Stale Summaries After Source Replacement
+## Revisit Quiz History
+
+1. The user opens a file that already has quiz history.
+2. The quiz panel lists previous quizzes by mode, focus mode, creation time, and attempt summary.
+3. The user selects a stored quiz.
+4. The UI renders the persisted quiz metadata and quick access to the latest attempt or a new retry.
+5. The user can reopen older attempts later from the dedicated quiz route.
+
+## Detect Stale Summaries and Quizzes After Source Replacement
 
 1. The user opens an existing file record.
 2. The user replaces the source file content while preserving the record.
 3. The file repository stores the new blob and recomputes the content fingerprint.
-4. Existing summaries remain in history.
-5. Any summary whose stored fingerprint no longer matches the current file fingerprint is marked stale.
-6. The user can generate a fresh summary from the updated source.
+4. Existing summaries and quizzes remain in history.
+5. Any summary or quiz whose stored fingerprint no longer matches the current file fingerprint is marked stale.
+6. The user can generate fresh study artifacts from the updated source.
+
+## Handle Unsupported or Insufficient Quiz Input
+
+1. The user attempts to generate a quiz for a file.
+2. The quiz workflow checks the existing extraction state and available source material.
+3. If the file is unsupported, empty, failed, or too weak for the requested question count, the UI shows a specific message.
+4. The app does not generate fake quiz content from missing or low-signal input.
 
 ## Review the Dashboard
 

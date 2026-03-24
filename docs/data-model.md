@@ -2,7 +2,7 @@
 
 ## Overview
 
-Student Assistant Hub stores Phase 1 and Phase 2 data locally in IndexedDB through Dexie. The schema remains versioned so the application can evolve without collapsing into ad hoc persistence.
+Student Assistant Hub stores Phase 1, Phase 2, and Phase 3 data locally in IndexedDB through Dexie. The schema remains versioned so the application can evolve without collapsing into ad hoc persistence.
 
 All primary entities use:
 
@@ -53,6 +53,25 @@ All primary entities use:
 - `study_notes`
 - `key_concepts`
 
+### Quiz Modes
+
+- `multiple_choice`
+- `true_false`
+- `mixed`
+
+### Quiz Focus Modes
+
+- `balanced`
+- `key_concepts`
+- `review`
+
+### Quiz Question Types
+
+- `multiple_choice`
+- `true_false`
+
+Short-answer is intentionally deferred in Phase 3 and is therefore not represented as an active stored question type.
+
 ## Table: courses
 
 ### Purpose
@@ -81,7 +100,7 @@ Organizes the academic workspace by subject or course.
 
 ### Purpose
 
-Stores local file metadata separately from raw blobs and now carries source fingerprint data for Phase 2 stale detection.
+Stores local file metadata separately from raw blobs and carries source fingerprint data for stale detection.
 
 ### Main Fields
 
@@ -111,11 +130,12 @@ Stores local file metadata separately from raw blobs and now carries source fing
 - one file can link to many tags through `tagIds`
 - one file can have many extracted-document artifacts
 - one file can have many summaries
+- one file can have many quizzes
 
 ### Notes and Constraints
 
 - `contentFingerprint` changes only when the source content changes
-- metadata-only edits must not invalidate summaries
+- metadata-only edits must not invalidate summaries or quizzes
 
 ## Table: fileBlobs
 
@@ -240,7 +260,7 @@ Stores app-level preferences and capability state.
 
 ### Purpose
 
-Stores the result of attempting to extract text from a file for Phase 2 processing.
+Stores the result of attempting to extract text from a file for Phase 2 and Phase 3 processing.
 
 ### Main Fields
 
@@ -261,7 +281,7 @@ Stores the result of attempting to extract text from a file for Phase 2 processi
 ### Relationships
 
 - many extracted-document records can belong to one file
-- one extracted-document record can be referenced by many summaries created from that same source fingerprint
+- one extracted-document record can be referenced by many summaries and many quizzes created from the same source fingerprint
 
 ### Notes and Constraints
 
@@ -340,10 +360,133 @@ Stores extracted important terms or concepts associated with a summary.
 - concept terms must come from the source text
 - scores are heuristic weights used for ordering, not confidence guarantees
 
+## Table: quizzes
+
+### Purpose
+
+Stores generated quiz headers tied to a file and a specific extracted-document fingerprint.
+
+### Main Fields
+
+- `id`
+- `sourceFileId`
+- `extractedDocumentId`
+- `sourceFingerprint`
+- `title`
+- `mode`
+- `focusMode`
+- `includeExplanations`
+- `questionCount`
+- `createdAt`
+- `updatedAt`
+
+### Relationships
+
+- many quizzes can belong to one file
+- many quizzes can reference one extracted-document artifact
+- one quiz can have many quiz questions
+- one quiz can have many quiz attempts
+
+### Notes and Constraints
+
+- quizzes are matched against `sourceFingerprint` for stale detection
+- generation options are stored on the quiz so history remains explainable
+- duplicate current quizzes can be avoided by matching file, fingerprint, and generation options
+
+## Table: quizQuestions
+
+### Purpose
+
+Stores persisted generated questions for each quiz.
+
+### Main Fields
+
+- `id`
+- `quizId`
+- `type`
+- `prompt`
+- `choices`
+- `correctAnswer`
+- `explanation`
+- `sourceHint`
+- `focusTag`
+- `order`
+- `createdAt`
+- `updatedAt`
+
+### Relationships
+
+- many quiz questions belong to one quiz
+- one quiz question can have many quiz answers across attempts
+
+### Notes and Constraints
+
+- `type` is currently limited to `multiple_choice` and `true_false`
+- explanations are persisted so review stays stable even after the generation UI closes
+- `focusTag` keeps track of whether a question was generated from balanced, concept-heavy, or review-oriented logic
+
+## Table: quizAttempts
+
+### Purpose
+
+Stores user quiz-taking sessions and their aggregate results.
+
+### Main Fields
+
+- `id`
+- `quizId`
+- `startedAt`
+- `completedAt`
+- `score`
+- `totalQuestions`
+- `correctCount`
+- `incorrectCount`
+- `mode`
+- `createdAt`
+- `updatedAt`
+
+### Relationships
+
+- many attempts belong to one quiz
+- one attempt can have many quiz answers
+
+### Notes and Constraints
+
+- an attempt is created when the user starts a quiz
+- aggregate counts are stored for fast history rendering
+- `score` remains `null` until the attempt is submitted
+
+## Table: quizAnswers
+
+### Purpose
+
+Stores per-question answers and correctness for a specific attempt.
+
+### Main Fields
+
+- `id`
+- `attemptId`
+- `questionId`
+- `answer`
+- `isCorrect`
+- `evaluatedAt`
+- `createdAt`
+- `updatedAt`
+
+### Relationships
+
+- many answers belong to one attempt
+- many answers can reference the same quiz question across retries
+
+### Notes and Constraints
+
+- answers are normalized before evaluation
+- persisted review uses the stored answer rows rather than recalculating from volatile UI state
+
 ## Future Extension Notes
 
-The Phase 2 model is designed so later phases can build on it:
+The Phase 3 model is designed so later phases can build on it:
 
-- quiz generation can reuse extracted text and deterministic chunking
-- quiz workflows can reuse concept artifacts
-- export/sync can treat extracted documents and summaries as additive local artifacts
+- quiz review can reuse source hints and explanations without regenerating questions
+- future study workflows can reference attempt history and stale state
+- export or sync can treat extracted documents, summaries, quizzes, and attempts as additive local artifacts

@@ -33,6 +33,10 @@ export type DocumentType = "plain_text" | "markdown" | "pdf_text" | "unsupported
 export type ExtractionStatus = "pending" | "success" | "failed" | "unsupported" | "empty";
 
 export type SummaryMode = "quick_summary" | "structured_summary" | "study_notes" | "key_concepts";
+export type QuizMode = "multiple_choice" | "true_false" | "mixed";
+export type QuizFocusMode = "key_concepts" | "balanced" | "review";
+export type QuizQuestionType = "multiple_choice" | "true_false";
+export type QuizQuestionFocusTag = "key_concepts" | "balanced" | "review";
 
 export type SummarySectionKey =
   | "overview"
@@ -167,6 +171,55 @@ export interface SummaryConcept extends Omit<BaseEntity, "deletedAt"> {
   term: string;
   score: number;
   occurrences: number;
+}
+
+export interface QuizRecord extends Omit<BaseEntity, "deletedAt"> {
+  sourceFileId: string;
+  extractedDocumentId: string;
+  sourceFingerprint: string;
+  title: string;
+  mode: QuizMode;
+  focusMode: QuizFocusMode;
+  includeExplanations: boolean;
+  questionCount: number;
+}
+
+export interface QuizQuestion extends Omit<BaseEntity, "deletedAt"> {
+  quizId: string;
+  type: QuizQuestionType;
+  prompt: string;
+  choices: string[];
+  correctAnswer: string;
+  explanation: string;
+  sourceHint: string;
+  focusTag: QuizQuestionFocusTag;
+  order: number;
+}
+
+export interface QuizAttempt extends Omit<BaseEntity, "deletedAt"> {
+  quizId: string;
+  startedAt: string;
+  completedAt: string | null;
+  score: number | null;
+  totalQuestions: number;
+  correctCount: number;
+  incorrectCount: number;
+  mode: QuizMode;
+}
+
+export interface QuizAnswer extends Omit<BaseEntity, "deletedAt"> {
+  attemptId: string;
+  questionId: string;
+  answer: string;
+  isCorrect: boolean;
+  evaluatedAt: string;
+}
+
+export interface QuizGenerationOptions {
+  questionCount: 5 | 10 | 15;
+  mode: QuizMode;
+  focusMode: QuizFocusMode;
+  includeExplanations: boolean;
 }
 
 export interface ReminderFormValue {
