@@ -2,9 +2,21 @@
 
 ## Overview
 
-Student Assistant Hub stores all product data locally in IndexedDB through Dexie. The data model now supports the completed workspace, summary, and quiz flows without relying on any backend service.
+Student Assistant Hub stores product data locally in IndexedDB through Dexie.
 
-Every primary persisted entity uses stable IDs and timestamps. Derived study artifacts are stored separately from source file records so that history and stale detection remain explicit.
+The current model covers:
+
+- course management
+- nested workspace folders for courses and My Drive
+- local file storage
+- import review state
+- confirmed document assignments
+- extracted text and embeddings
+- summaries
+- quizzes
+- calendar, reminders, and notifications
+
+Every primary persisted entity uses stable IDs and timestamps. Derived study artifacts are stored separately from source file records so history and stale detection remain explicit.
 
 ## Controlled Values
 
@@ -31,6 +43,8 @@ Every primary persisted entity uses stable IDs and timestamps. Derived study art
 - `plain_text`
 - `markdown`
 - `pdf_text`
+- `docx`
+- `pptx`
 - `unsupported`
 
 ### Extraction Statuses
@@ -40,6 +54,36 @@ Every primary persisted entity uses stable IDs and timestamps. Derived study art
 - `failed`
 - `unsupported`
 - `empty`
+
+### Import Batch Source Types
+
+- `files`
+- `folder`
+
+### Import Batch Statuses
+
+- `draft`
+- `suggested`
+- `needs_review`
+- `confirmed`
+
+### Import Batch Item Statuses
+
+- `suggested`
+- `needs_review`
+- `unknown`
+- `confirmed`
+
+### Assignment Provenance
+
+- `manual_upload`
+- `manual_update`
+- `import_confirmation`
+
+### Embedding Purposes
+
+- `course_profile`
+- `document_assignment`
 
 ### Summary Modes
 
@@ -65,7 +109,10 @@ Every primary persisted entity uses stable IDs and timestamps. Derived study art
 - `multiple_choice`
 - `true_false`
 
-Short-answer is intentionally not stored as an active question type because it is still deferred.
+### Quiz Source Scopes
+
+- `file`
+- `course`
 
 ## Core Workspace Tables
 
@@ -73,12 +120,13 @@ Short-answer is intentionally not stored as an active question type because it i
 
 Purpose:
 
-- stores course structure used by files and events
+- stores the course structure used by files and events
 
 Main fields:
 
 - `id`
 - `name`
+- `description`
 - `code`
 - `instructor`
 - `semester`
@@ -87,6 +135,28 @@ Main fields:
 - `createdAt`
 - `updatedAt`
 - `deletedAt`
+
+### `courseFolders`
+
+Purpose:
+
+- stores nested folders for either a course workspace or My Drive
+
+Main fields:
+
+- `id`
+- `courseId`
+- `parentFolderId`
+- `name`
+- `path`
+- `createdAt`
+- `updatedAt`
+- `deletedAt`
+
+Notes:
+
+- `courseId = null` means the folder belongs to My Drive
+- `path` is the canonical in-scope folder path used for restore and relative-path mapping
 
 ### `files`
 
@@ -100,6 +170,7 @@ Main fields:
 - `name`
 - `originalName`
 - `courseId`
+- `folderId`
 - `category`
 - `mimeType`
 - `extension`
@@ -107,6 +178,8 @@ Main fields:
 - `notes`
 - `tagIds`
 - `blobId`
+- `importBatchId`
+- `originalRelativePath`
 - `importedAt`
 - `previewKind`
 - `contentFingerprint`
@@ -119,6 +192,10 @@ Notes:
 
 - metadata edits do not invalidate summaries or quizzes
 - source replacement changes `contentFingerprint` and `contentUpdatedAt`
+- `courseId === null` means the file currently lives in the general drive
+- `folderId` is meaningful for both course folders and drive folders
+- `courseId` and `folderId` remain nullable until confirmation in the smart import flow
+- `deletedAt` marks when the file entered Trash and is reused for restore / permanent delete flows
 
 ### `fileBlobs`
 
@@ -135,20 +212,130 @@ Main fields:
 - `createdAt`
 - `updatedAt`
 
+### `quizzes`
+
+Purpose:
+
+- stores quiz headers for file-level and course-level quizzes
+
+Main fields:
+
+- `id`
+- `sourceScope`
+- `sourceFileId`
+- `sourceCourseId`
+- `sourceFingerprint`
+- `title`
+- `mode`
+- `focusMode`
+- `includeExplanations`
+- `questionCount`
+- `createdAt`
+- `updatedAt`
+
+Notes:
+
+- file quizzes keep `sourceScope = file` and `sourceFileId`
+- course quizzes keep `sourceScope = course` and `sourceCourseId`
+- `sourceFingerprint` is a combined fingerprint for the saved source set and its weights
+
+### `quizSources`
+
+Purpose:
+
+- stores the normalized file list behind one quiz together with each file's weight
+
+Main fields:
+
+- `id`
+- `quizId`
+- `fileId`
+- `extractedDocumentId`
+- `sourceFingerprint`
+- `weight`
+- `order`
+- `createdAt`
+- `updatedAt`
+
+Notes:
+
+- single-file quizzes still get one `quizSources` row
+- course quizzes store one row per included file
+- stale detection compares current file fingerprints against these stored source links
+
+### `documentAssignments`
+
+Purpose:
+
+- stores the confirmed course and optional folder assignment for a file
+
+Main fields:
+
+- `id`
+- `documentId`
+- `courseId`
+- `folderId`
+- `provenance`
+- `confirmedAt`
+- `createdAt`
+- `updatedAt`
+
+Notes:
+
+- this is the durable assignment record
+- smart import suggestions do not become final assignments until confirmation writes this table
+- drive-level files do not keep a document assignment record
+
+### `importBatches`
+
+Purpose:
+
+- stores one smart import session
+
+Main fields:
+
+- `id`
+- `sourceType`
+- `status`
+- `createdAt`
+- `updatedAt`
+
+### `importBatchItems`
+
+Purpose:
+
+- stores per-file review state for one import batch
+
+Main fields:
+
+- `id`
+- `batchId`
+- `documentId`
+- `originalRelativePath`
+- `folderGroupPath`
+- `suggestedCourseId`
+- `secondBestCourseId`
+- `confidence`
+- `bestScore`
+- `secondBestScore`
+- `status`
+- `reason`
+- `finalCourseId`
+- `finalFolderId`
+- `ranking`
+- `createdAt`
+- `updatedAt`
+
+Notes:
+
+- ranking is persisted so the review UI can explain the suggestion without recomputing immediately
+- `finalCourseId` and `finalFolderId` remain unset until user confirmation unless the user confirms the suggested value
+
 ### `tags`
 
 Purpose:
 
 - supports optional file tagging
-
-Main fields:
-
-- `id`
-- `label`
-- `color`
-- `createdAt`
-- `updatedAt`
-- `deletedAt`
 
 ### `events`
 
@@ -156,41 +343,11 @@ Purpose:
 
 - stores local calendar events
 
-Main fields:
-
-- `id`
-- `title`
-- `description`
-- `type`
-- `courseId`
-- `startsAt`
-- `endsAt`
-- `allDay`
-- `location`
-- `status`
-- `createdAt`
-- `updatedAt`
-- `deletedAt`
-
 ### `reminders`
 
 Purpose:
 
 - stores reminder scheduling for events
-
-Main fields:
-
-- `id`
-- `eventId`
-- `mode`
-- `offsetMinutes`
-- `scheduledFor`
-- `snoozedUntil`
-- `status`
-- `lastTriggeredAt`
-- `createdAt`
-- `updatedAt`
-- `deletedAt`
 
 ### `notifications`
 
@@ -198,38 +355,13 @@ Purpose:
 
 - stores in-app notification records
 
-Main fields:
-
-- `id`
-- `reminderId`
-- `eventId`
-- `title`
-- `body`
-- `scheduledFor`
-- `status`
-- `readAt`
-- `createdAt`
-- `updatedAt`
-
 ### `settings`
 
 Purpose:
 
 - stores local preferences and capability state
 
-Main fields:
-
-- `key`
-- `language`
-- `notificationsEnabled`
-- `notificationPermission`
-- `defaultCalendarView`
-- `compactFileCards`
-- `weekStartsOn`
-- `createdAt`
-- `updatedAt`
-
-## Phase 2 Document Tables
+## Document and AI Tables
 
 ### `extractedDocuments`
 
@@ -253,27 +385,96 @@ Main fields:
 - `createdAt`
 - `updatedAt`
 
-Notes:
-
-- extraction status remains explicit
-- one file can accumulate extraction history across source replacements
-
-### `summaries`
+### `courseProfiles`
 
 Purpose:
 
-- stores summary headers per file, fingerprint, and mode
+- stores semantic course profiles derived from course metadata plus confirmed course documents
+
+Main fields:
+
+- `id`
+- `courseId`
+- `embeddingModel`
+- `sourceFingerprint`
+- `profileText`
+- `keywords`
+- `embedding`
+- `documentCount`
+- `createdAt`
+- `updatedAt`
+
+Notes:
+
+- profiles are the only valid AI comparison targets for course suggestion
+- the system does not classify against invented or open-ended labels
+
+### `documentEmbeddings`
+
+Purpose:
+
+- stores reusable embeddings for assignment representations
 
 Main fields:
 
 - `id`
 - `fileId`
+- `sourceFingerprint`
+- `purpose`
+- `embeddingModel`
+- `representationText`
+- `embedding`
+- `createdAt`
+- `updatedAt`
+
+## Summary Tables
+
+### `summaries`
+
+Purpose:
+
+- stores summary headers for file-level summaries and any archived course-level study-note artifacts
+
+Main fields:
+
+- `id`
+- `sourceScope`
+- `fileId`
+- `sourceCourseId`
 - `extractedDocumentId`
 - `sourceFingerprint`
 - `mode`
+- `title`
 - `overview`
 - `createdAt`
 - `updatedAt`
+
+Notes:
+
+- file summaries keep `sourceScope = file` and `fileId`
+- archived course study notes keep `sourceScope = course` and `sourceCourseId`
+- `sourceFingerprint` is a combined fingerprint for the saved source set
+
+### `summarySources`
+
+Purpose:
+
+- stores the normalized file list behind one summary
+
+Main fields:
+
+- `id`
+- `summaryId`
+- `fileId`
+- `extractedDocumentId`
+- `sourceFingerprint`
+- `order`
+
+Notes:
+
+- single-file summaries still get one `summarySources` row
+- archived course study notes store one row per included file
+- stale detection compares current file fingerprints against these stored source links
 
 ### `summarySections`
 
@@ -281,53 +482,19 @@ Purpose:
 
 - stores sectioned summary output separately from the summary header
 
-Main fields:
-
-- `id`
-- `summaryId`
-- `sectionKey`
-- `order`
-- `content`
-- `createdAt`
-- `updatedAt`
-
 ### `summaryConcepts`
 
 Purpose:
 
-- stores extracted concept artifacts tied to a summary
+- stores extracted term artifacts tied to a summary
 
-Main fields:
-
-- `id`
-- `summaryId`
-- `term`
-- `score`
-- `occurrences`
-- `createdAt`
-- `updatedAt`
-
-## Phase 3 Quiz Tables
+## Quiz Tables
 
 ### `quizzes`
 
 Purpose:
 
-- stores generated quiz headers per file and fingerprint
-
-Main fields:
-
-- `id`
-- `sourceFileId`
-- `extractedDocumentId`
-- `sourceFingerprint`
-- `title`
-- `mode`
-- `focusMode`
-- `includeExplanations`
-- `questionCount`
-- `createdAt`
-- `updatedAt`
+- stores generated quiz headers for file-level and course-level quizzes
 
 ### `quizQuestions`
 
@@ -335,40 +502,11 @@ Purpose:
 
 - stores persisted generated questions
 
-Main fields:
-
-- `id`
-- `quizId`
-- `type`
-- `prompt`
-- `choices`
-- `correctAnswer`
-- `explanation`
-- `sourceHint`
-- `focusTag`
-- `order`
-- `createdAt`
-- `updatedAt`
-
 ### `quizAttempts`
 
 Purpose:
 
 - stores quiz sessions and aggregate results
-
-Main fields:
-
-- `id`
-- `quizId`
-- `startedAt`
-- `completedAt`
-- `score`
-- `totalQuestions`
-- `correctCount`
-- `incorrectCount`
-- `mode`
-- `createdAt`
-- `updatedAt`
 
 ### `quizAnswers`
 
@@ -376,24 +514,15 @@ Purpose:
 
 - stores per-question answers for an attempt
 
-Main fields:
-
-- `id`
-- `attemptId`
-- `questionId`
-- `answer`
-- `isCorrect`
-- `evaluatedAt`
-- `createdAt`
-- `updatedAt`
-
 ## Relationships
 
+- one `course` can relate to many `courseFolders`
 - one `course` can relate to many `files`
 - one `course` can relate to many `events`
 - one `file` has one active blob record and can have many extracted documents
-- one `file` can have many `summaries`
-- one `file` can have many `quizzes`
+- one `file` can belong to zero or one active confirmed `documentAssignment`
+- one `file` can participate in zero or one `importBatch`
+- one `importBatch` can have many `importBatchItems`
 - one `summary` can have many `summarySections` and `summaryConcepts`
 - one `quiz` can have many `quizQuestions`
 - one `quiz` can have many `quizAttempts`
@@ -403,19 +532,12 @@ Main fields:
 
 ## Versioning and Stale Detection
 
-The key versioning rule is fingerprint-based, not timestamp-only:
+The key versioning rule remains fingerprint-based, not timestamp-only:
 
 - source files carry a `contentFingerprint`
+- extracted documents store the fingerprint used during extraction
 - summaries store the fingerprint used during generation
 - quizzes store the fingerprint used during generation
 - a summary or quiz becomes stale when its stored fingerprint no longer matches the current file fingerprint
 
 This keeps metadata-only edits from invalidating derived study artifacts.
-
-## Phase 4 Hardening Note
-
-Phase 4 did not add new entities. It hardened the trustworthiness of the existing model through:
-
-- stronger tests around persistence and stale flows
-- clearer startup and verification paths
-- better docs for the actual schema and relationships

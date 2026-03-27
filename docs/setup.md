@@ -2,23 +2,28 @@
 
 ## Current Repository State
 
-Student Assistant Hub is a fully local web application with Phases 1 through 4 implemented.
+Student Assistant Hub is a fully local web application with:
 
-The repository includes:
-
-- the offline-first workspace
-- local extraction and summarization
-- local quiz generation and review
+- offline-first course, folder, file, calendar, and reminder workflows
+- local document extraction
+- local Ollama-backed smart import suggestions
+- local Ollama-backed summaries and quizzes
 - startup scripts
 - verify tooling
 - coverage reporting
 - hardened responsive and bilingual UI
+
+Current product note:
+
+- file-level summaries and study notes are available in each file detail dialog
+- course-level multi-file study notes are archived from the current UI until stronger local model quality is available
 
 ## Requirements
 
 - Node.js 20 or newer
 - npm 10 or newer
 - a modern browser with IndexedDB support
+- Ollama installed locally for AI-backed features
 
 For e2e tests:
 
@@ -62,6 +67,37 @@ npx playwright install
 npm run dev
 ```
 
+## Local AI Setup
+
+Required models:
+
+- `qwen3:4b`
+- `qwen3-embedding:0.6b`
+
+The repo includes a local readiness check:
+
+```bash
+npm run ai:status
+```
+
+It verifies:
+
+- the configured Ollama endpoint is reachable
+- the text model exists
+- the embedding model exists
+
+## Environment Variables
+
+The app does not require backend credentials.
+
+For local AI behavior, the optional environment variables are:
+
+- `OLLAMA_BASE_URL`
+- `OLLAMA_TIMEOUT_MS`
+- `OLLAMA_RETRY_COUNT`
+
+Example defaults are provided in `.env.example`.
+
 ## Verification Commands
 
 ### Main verification
@@ -88,6 +124,8 @@ This runs:
 - `npm run test`
 - `npm run build`
 - `npm run test:e2e`
+
+Playwright starts a dedicated `next start` server on `http://127.0.0.1:3100`, so full verification does not collide with a normal dev server on port `3000`.
 
 ### Coverage
 
@@ -118,16 +156,10 @@ The startup scripts are intentionally simple. They:
 
 The Windows scripts also write local dev logs beside the project root.
 
-## Environment Variables
-
-The app remains backend-free. No environment file is required for normal local development.
-
-`.env.example` remains intentionally minimal and optional.
-
 ## Offline-First Expectations
 
 - all primary product data is stored in IndexedDB
-- extracted text, summaries, quizzes, attempts, and answers are also local
+- extracted text, course profiles, embeddings, summaries, quizzes, attempts, and answers are also local
 - clearing site data removes the local workspace
 - browser quota still applies
 
@@ -138,6 +170,8 @@ Supported:
 - plain text files
 - markdown files
 - text-based PDFs
+- DOCX
+- PPTX
 
 Not supported:
 
@@ -154,6 +188,8 @@ Browser notifications are optional and honest:
 - they depend on browser support
 - they are not guaranteed when the browser is closed or heavily suspended
 
-## Notes on Unix Script Verification
+## Notes on Test AI Mode
 
-The Unix run path was exercised through Git Bash in this repository cleanup cycle. The same scripts remain suitable for normal Unix-like shells, and the docs use `bash ...` so they do not depend on executable-bit preservation.
+The end-to-end test suite uses a deterministic mock AI mode so browser-flow tests stay stable and do not depend on live Ollama responses.
+
+Normal development and normal runtime behavior still use the real local Ollama endpoint.

@@ -4,10 +4,12 @@ node_modules/
 # next.js
 .next/
 out/
+output/
 
 # production builds
 build/
 dist/
+*.tsbuildinfo
 
 # coverage
 coverage/

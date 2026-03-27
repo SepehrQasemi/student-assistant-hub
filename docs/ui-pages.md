@@ -2,25 +2,33 @@
 
 ## Design Direction
 
-The app is intentionally calm, minimal, and productivity-oriented. Phase 4 focused on consistency and usability rather than adding a new visual language.
+The app is intentionally calm, minimal, and productivity-oriented.
 
-Key Phase 4 UI goals:
+Current UI goals:
 
-- clearer spacing
-- more stable dialog sizing
-- better mobile and tablet behavior
-- better handling of longer French labels
-- cleaner hierarchy between primary and secondary actions
+- clear organization across courses, folders, files, and study actions
+- explicit review states instead of hidden automation
+- responsive layouts that survive longer French labels
+- a clear separation between organization flows and study-generation flows
+
+## Global Shell
+
+### Purpose
+
+- keep global navigation and cross-page controls out of the main content column
+
+### Primary Components
+
+- fixed desktop sidebar navigation
+- notification center pinned near the top of the desktop sidebar
+- language switcher pinned near the bottom of the desktop sidebar
+- compact mobile utility controls when the sidebar is hidden
 
 ## `/`
 
 ### Purpose
 
 - redirect to the active dashboard entry point
-
-### Primary Components
-
-- lightweight redirect handoff
 
 ## `/dashboard`
 
@@ -38,12 +46,6 @@ Key Phase 4 UI goals:
 - events this week
 - quick actions
 
-### Responsive Notes
-
-- stat cards stack cleanly on smaller widths
-- quick actions wrap instead of clipping
-- localized dates use compact formatting helpers
-
 ## `/courses`
 
 ### Purpose
@@ -53,36 +55,64 @@ Key Phase 4 UI goals:
 ### Primary Components
 
 - course list
-- create/edit dialog
+- create and edit dialog
 - delete flow
+- open-workspace action
 - color indicators
+- optional course description field
 
-### Responsive Notes
+## `/courses/[courseId]`
 
-- course cards remain readable on narrow widths
-- form actions wrap rather than compressing
+### Purpose
+
+- give each course a dedicated workspace without duplicating file, calendar, summary, or quiz pipelines
+
+### Primary Components
+
+- course info card
+- course-scoped folder tree
+- course-scoped file section
+- course-scoped calendar section
+- course-scoped `Quizzes` tab for multi-file quiz generation
+- locked course upload flow
+
+### Key User Actions
+
+- create nested course folders
+- upload files directly into the active course or a selected folder
+- browse files grouped by folder structure
+- trigger file-level summary actions from stored files
+- trigger course-level quiz actions from the dedicated quiz tab
 
 ## `/files`
 
 ### Purpose
 
-- act as the central product surface for the file workspace, summaries, and quizzes
+- act as the central product surface for file organization, smart import review, summaries, and quizzes
 
 ### Primary Components
 
-- import dialog
+- manual import dialog
+- smart import dialog
+- import review dialog
+- drive-style sidebar with all files, My Drive, course shortcuts, and Trash
 - search and filter toolbar
-- grid/list toggle
-- recent files panel
-- file cards or list rows
+- bulk selection toolbar
+- file list rows with location metadata
 - file detail dialog
 - summary panel
 - quiz panel
 
 ### Key User Actions
 
-- import files
-- assign or reassign courses
+- import files into a chosen course and optional course folder
+- keep files in a general drive when they should not belong to a course
+- import a full folder while preserving relative paths
+- run smart import against existing courses only
+- review confidence and ambiguity before confirmation
+- override course and folder decisions
+- select multiple files and move them to Trash
+- restore trashed files or delete them permanently
 - edit metadata
 - preview files
 - generate summaries
@@ -93,8 +123,7 @@ Key Phase 4 UI goals:
 ### Responsive Notes
 
 - filters stack instead of overflowing
-- view toggles stay reachable on mobile
-- metadata rows wrap cleanly
+- import review tables remain readable on smaller widths
 - file detail dialog switches to a single-column flow earlier to reduce crowding
 
 ## `/quizzes/[quizId]`
@@ -112,12 +141,6 @@ Key Phase 4 UI goals:
 - attempt history
 - stale badge
 
-### Responsive Notes
-
-- one-question-at-a-time flow keeps interaction manageable on smaller screens
-- results and history stack vertically on narrower layouts
-- long prompts and French review labels wrap instead of overflowing
-
 ## `/calendar`
 
 ### Purpose
@@ -126,23 +149,19 @@ Key Phase 4 UI goals:
 
 ### Primary Components
 
+- sticky filter and action sidebar
+- week-first navigation toolbar
 - view switcher
-- filters
-- FullCalendar surface
+- full-height FullCalendar surface
 - agenda list
 - event form dialog
-
-### Responsive Notes
-
-- the calendar surface now uses an overflow container with a minimum content width
-- controls remain usable on smaller screens instead of collapsing into unusable density
-- agenda dates are localized through shared helpers
+- calendar import dialog
 
 ## `/settings`
 
 ### Purpose
 
-- manage local preferences, notification behavior, storage visibility, and language
+- manage local preferences, notification behavior, storage visibility, language, and AI readiness
 
 ### Primary Components
 
@@ -150,10 +169,11 @@ Key Phase 4 UI goals:
 - notification controls
 - calendar preferences
 - storage information
+- local AI status card
 - app info
 
-### Responsive Notes
+### Key User Signals
 
-- settings cards stack vertically on smaller screens
-- longer French labels remain readable without clipping
-- the header language switcher and page-level settings controls remain visually distinct
+- whether Ollama is reachable
+- whether the text and embedding models are available
+- whether local AI-backed study features should work without extra setup

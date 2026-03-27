@@ -1,42 +1,60 @@
 # Student Assistant Hub
 
-Student Assistant Hub is an offline-first student workspace for managing courses, academic files, calendar events, reminders, local summaries, and local study quizzes in one place.
+Student Assistant Hub is an offline-first student workspace for managing courses, course folders, academic files, calendar events, reminders, summaries, and study quizzes in one place.
 
-The project is intentionally browser-local:
+The product remains local-first:
 
-- no backend
+- no remote backend
 - no cloud storage
-- no remote AI services
-- no paid inference APIs
+- no sync service
+- no paid AI API
 
-## Current Status
-
-Phases 1 through 4 are implemented.
-
-- Phase 1: offline-first workspace, file manager, calendar, reminders, dashboard, settings
-- Phase 2: local document extraction, normalization, chunking, summarization, and concept extraction
-- Phase 3: local quiz generation, execution, scoring, review, history, and stale-quiz handling
-- Phase 4: hardening pass covering startup scripts, verification tooling, coverage reporting, responsive cleanup, and English/French audit
-
-Phase 4 is a product-quality pass, not a new feature domain. The current repository is the hardened local product foundation.
+The current repository uses IndexedDB for product data and a small set of same-origin Next route handlers only as a bridge to local machine capabilities such as Ollama and browser-blocked calendar fetches.
 
 ## Implemented Product Scope
 
 - bilingual English and French UI
 - local IndexedDB persistence through Dexie
-- courses CRUD
-- offline file workspace with blob storage, metadata editing, filters, notes, tags, and realistic previews
-- calendar with day, week, month, quarter, and agenda views
+- course CRUD with optional descriptions
+- nested folders inside each course
+- dedicated course workspace pages
+- manual file upload into a selected course, optional course folder, or the general drive
+- bulk mixed-file upload
+- folder import with preserved relative paths
+- central file manager with an all-files, My Drive, course, and Trash sidebar
+- bulk file selection with move-to-trash, restore, and permanent delete actions
+- non-destructive trash flow before final deletion
+- smart import review flow that suggests an existing course per file before confirmation
+- assignment logic that can only choose among existing courses
+- no automatic course creation by AI
+- no final import assignment without explicit user confirmation
+- local extraction for plain text, markdown, text-based PDFs, DOCX, and PPTX
+- local Ollama-backed document summaries
+- local Ollama-backed quiz generation with persisted quiz history and stale detection
+- file-level study notes remain available in each file detail dialog
+- course-level multi-file study notes are intentionally archived from the current UI until stronger local model quality is available
+- calendar with week-first navigation plus day, month, quarter, and agenda views
+- one-time calendar import from ICS files and public calendar URLs
 - reminders and in-app notification center
 - dashboard and settings
-- local extraction for plain text, markdown, and text-based PDFs
-- deterministic summaries and key concepts
-- summary history and stale-summary detection
-- deterministic local quiz generation from one file at a time
-- quiz history, attempt history, scoring, explanations, and stale-quiz detection
 - startup scripts for Windows and Unix-like shells
-- `npm run verify`, `npm run verify:full`, and coverage reporting
+- `npm run verify`, `npm run verify:full`, `npm run coverage`, and `npm run ai:status`
 - unit, integration, component, and end-to-end tests
+
+## Local AI Stack
+
+Required local models:
+
+- text model: `qwen3:4b`
+- embedding model: `qwen3-embedding:0.6b`
+
+The app uses Ollama through local HTTP only. The AI layer is used for:
+
+- course suggestion support during smart import
+- structured document summarization
+- structured quiz generation
+
+Core categorization logic is not delegated blindly to the LLM. Course suggestion is driven primarily by embeddings and application-side scoring, with filename and folder-path hints used only as secondary signals.
 
 ## Stack
 
@@ -48,6 +66,7 @@ Phase 4 is a product-quality pass, not a new feature domain. The current reposit
 - React Hook Form + Zod
 - FullCalendar
 - `pdfjs-dist`
+- `jszip`
 - Vitest + Testing Library
 - Playwright
 
@@ -84,6 +103,22 @@ npx playwright install
 npm run dev
 ```
 
+## Ollama Setup Check
+
+The repo expects Ollama to be reachable locally and the required models to exist.
+
+```bash
+npm run ai:status
+```
+
+Default local AI configuration:
+
+- `OLLAMA_BASE_URL=http://127.0.0.1:11434/api`
+- `OLLAMA_TIMEOUT_MS=90000`
+- `OLLAMA_RETRY_COUNT=2`
+
+These values can be overridden through `.env.local`.
+
 ## Verification
 
 Primary verification path:
@@ -108,6 +143,8 @@ This adds:
 
 - `npm run test:e2e`
 
+The e2e runner uses `next start` on `http://127.0.0.1:3100`, so it does not collide with a normal `next dev` session on port `3000`.
+
 Coverage:
 
 ```bash
@@ -123,11 +160,13 @@ Current global coverage thresholds:
 
 ## Supported Study Inputs
 
-Supported for local extraction and downstream study workflows:
+Supported for extraction and downstream study workflows:
 
 - plain text files
 - markdown files
 - text-based PDFs
+- DOCX
+- PPTX
 
 Explicitly not supported:
 
@@ -138,32 +177,50 @@ Explicitly not supported:
 - remote quiz generation
 - essay grading
 
+## Smart Import Behavior
+
+The smart import flow is intentionally conservative:
+
+1. The user uploads files or a folder.
+2. The app stores the local files and preserved relative paths.
+3. Text is extracted and normalized.
+4. The app compares each file only against the user's existing courses.
+5. The app produces a best course, second-best course, confidence, status, and reason.
+6. The user reviews and can override course and folder decisions.
+7. Final assignment is persisted only after confirmation.
+
+Folder-group consistency is a soft signal only. It can reinforce a likely course for sibling files, but it does not override clearly stronger content evidence.
+
 ## Honest Runtime Limits
 
 - IndexedDB quota depends on the browser
 - browser notifications are best-effort, not native-background guarantees
 - preview and extraction support depend on what the browser can safely render or parse
-- summaries and quizzes are deterministic local heuristics, not cloud LLM reasoning
+- text-based PDF support does not imply OCR support
+- Ollama must be running locally with the required models installed
 - clearing site data removes the local workspace and derived study artifacts
 
 ## Project Structure
 
 ```text
-app/                Next.js routes and layouts
+app/                Next.js routes, layouts, and same-origin AI bridge handlers
 components/         Reusable UI and feature components
-docs/               Product docs and implementation reports
+docs/               Current product docs
+docs/archive/       Historical reports and superseded planning notes
+lib/ai/             Ollama clients, prompts, schemas, and browser bridge helpers
 lib/db/             Dexie schema and defaults
 lib/i18n/           Locale dictionaries and helpers
 lib/repositories/   Persistence boundaries
-lib/services/       Product logic, reminders, summaries, and quizzes
+lib/services/       Product logic, imports, assignment scoring, summaries, and quizzes
 lib/validation/     Zod validation schemas
-scripts/            Verification helpers
+scripts/            Verification helpers and local AI checks
 tests/              Unit, component, integration, and e2e tests
 types/              Shared domain types
 ```
 
 ## Documentation
 
+- [Documentation Map](docs/README.md)
 - [Product Specification](docs/spec.md)
 - [Roadmap](docs/roadmap.md)
 - [Architecture](docs/architecture.md)
@@ -171,10 +228,7 @@ types/              Shared domain types
 - [User Flows](docs/user-flows.md)
 - [UI Pages](docs/ui-pages.md)
 - [Setup Guide](docs/setup.md)
-- [Phase 1 Report](docs/phase1-implementation-report.md)
-- [Phase 2 Report](docs/phase2-implementation-report.md)
-- [Phase 3 Report](docs/phase3-implementation-report.md)
-- [Phase 4 Hardening Report](docs/phase4-hardening-report.md)
+- [Archive Index](docs/archive/README.md)
 
 ## License
 

@@ -2,9 +2,16 @@
 
 ## Core Direction
 
-Student Assistant Hub is a fully local, offline-first web application. The app runs in the browser, stores its primary data in IndexedDB through Dexie, and keeps product logic behind repository and service boundaries.
+Student Assistant Hub remains a fully local, offline-first web application.
 
-There is still no backend in the current product state.
+Primary product data lives in IndexedDB through Dexie. The app does not use a remote backend, cloud persistence layer, or remote AI provider.
+
+The current repository does use a small same-origin runtime surface inside Next.js route handlers for two narrow purposes:
+
+- bridging the browser application to local Ollama
+- bridging remote ICS fetches when browser CORS blocks direct client access
+
+That runtime surface is not treated as a product backend. The domain model, persistence, and workflow state still remain browser-local.
 
 ## Main Libraries
 
@@ -16,10 +23,9 @@ There is still no backend in the current product state.
 - React Hook Form + Zod
 - FullCalendar
 - `pdfjs-dist`
+- `jszip`
 - Vitest + Testing Library
 - Playwright
-
-Phase 4 did not add a new product-domain dependency. It added startup and verification tooling around the existing application.
 
 ## Architectural Layers
 
@@ -29,14 +35,17 @@ Responsibilities:
 
 - route composition
 - page layout
-- dialogs, tabs, cards, and forms
+- dialogs, tabs, tables, cards, and forms
+- course-scoped workspace composition
+- drive-style file manager navigation and bulk selection
+- import review and confirmation UI
 - loading, empty, error, and stale states
 - responsive rendering
 
 Rules:
 
 - do not access IndexedDB directly
-- do not implement document-processing, summary, quiz, reminder, or scoring logic inside components
+- do not implement extraction, assignment scoring, summary generation, quiz generation, reminder logic, or notification logic inside components
 - source user-facing text from the i18n layer
 
 ### Application / Service Layer
@@ -45,14 +54,29 @@ Responsibilities:
 
 - file filtering and sorting
 - dashboard aggregation
+- course workspace aggregation
 - event filtering
+- calendar import parsing and recurrence expansion
 - reminder scheduling
 - notification dispatch
 - document ingestion and extraction
 - normalization and chunking
-- summarization and concept extraction
-- quiz source selection, generation, evaluation, and review
+- document representation building
+- course profile building
+- embedding-driven assignment suggestion
+- folder consistency analysis
+- import review and confirmation
+- summarization
+- quiz generation
 - stale detection
+
+The service layer owns the business rules for smart import:
+
+- suggestions can only target existing user courses
+- content similarity is the dominant signal
+- filename, path, and folder-group consistency are secondary signals
+- confirmation is required before final assignment is persisted
+- analysis failures must degrade to reviewable `unknown` items instead of silently dropping the batch
 
 ### Repository Layer
 
@@ -60,7 +84,31 @@ Responsibilities:
 
 - CRUD and query access for all persisted entities
 - Dexie-specific coordination
-- preserving a stable persistence boundary for later export or sync work
+- stable persistence boundaries for future export or migration work
+
+Persistence rules:
+
+- pages and feature components do not write to IndexedDB directly
+- final course and folder assignment flows go through repositories
+- summary and quiz persistence remains tied to extracted document fingerprints
+
+### Local AI Bridge Layer
+
+Responsibilities:
+
+- centralize Ollama base URL, timeout, and retry configuration
+- expose structured generation and embeddings through a stable local client
+- validate summary and quiz JSON outputs
+- normalize slightly incomplete summary JSON so long study-note runs do not fail on minor field-count drift
+- tolerate qwen-style structured outputs whether JSON arrives in the normal response field or the model thinking field
+- surface clear runtime errors when Ollama or required models are unavailable
+
+Current route handlers:
+
+- `GET /api/ai/status`
+- `POST /api/ai/embed`
+- `POST /api/ai/summarize`
+- `POST /api/ai/quiz`
 
 ### Local Persistence Layer
 
@@ -82,109 +130,116 @@ Responsibilities:
 
 ### Tooling / Verification Layer
 
-Phase 4 hardened the project around:
+Responsibilities:
 
 - startup scripts for Windows and Unix-like shells
 - `scripts/verify.mjs` for repeatable verification
+- `scripts/check-ollama.mjs` for local AI readiness checks
 - coverage instrumentation through Vitest
-- Playwright failure artifacts for debugging real browser regressions
+- Playwright failure artifacts for browser regressions
 
 ## High-Level Data Flow
 
-### Workspace Flow
+### Manual Upload Flow
 
-1. UI components trigger feature actions.
-2. Repositories handle persistence.
-3. Services aggregate or derive higher-level product behavior.
-4. UI re-renders through live queries and local state.
+1. The UI collects files plus an optional course and an optional in-scope folder.
+2. The import service resolves preserved relative paths when requested.
+3. The file repository stores metadata, blob content, and source fingerprint locally.
+4. Files without a selected course remain in the general drive and can still be stored inside drive folders.
+5. The assignment repository records the confirmed course assignment only when a course is selected.
+
+### Smart Import Flow
+
+1. The user uploads mixed files or a folder import.
+2. Files are stored locally with import-batch metadata and preserved relative paths.
+3. The ingestion service extracts and normalizes document text.
+4. Document representations are embedded through local Ollama.
+5. Course profile embeddings are built from existing confirmed course material.
+6. The assignment suggester ranks only the user's existing courses.
+7. Folder-group analysis can add a small consistency bonus.
+8. If automatic analysis is unavailable, review items still persist with `unknown` status and explicit reasons.
+9. Review items are persisted with suggested course, alternate course, confidence, status, and reason.
+10. The user confirms or overrides course and folder choices.
+11. Final assignments are persisted only after confirmation.
 
 ### Summary Flow
 
-1. A file is selected from the file workspace.
-2. The ingestion service resolves file type and extraction strategy.
+1. The user generates summaries from one stored file at a time through the file detail dialog.
+2. The ingestion service resolves the current extraction state by fingerprint for that file.
 3. Extracted text is normalized and chunked.
-4. The summarization service produces deterministic summary artifacts.
-5. Repositories persist extracted documents, summaries, sections, and concepts.
+4. The summary generator calls local Ollama with a structured JSON prompt reinforced by heading hints and deterministic concept hints.
+5. Long runs summarize chunks with bounded concurrency so local Ollama does not get overwhelmed by large files.
+6. Repositories persist the summary header, normalized source links, sections, and important terms, with concept terms reinforced by deterministic extraction when the model returns generic study words.
+7. Older summaries remain available and become stale when the linked source fingerprint changes.
+
+Current product note:
+
+- course-level multi-file study-note generation remains in the local service layer for future reactivation, but it is archived from the current UI until stronger local model quality is available
 
 ### Quiz Flow
 
-1. A supported file is selected from the file workspace.
-2. Quiz services load the current extracted document plus summary artifacts for the same fingerprint.
-3. Candidate services select useful source material.
-4. Question generation produces deterministic multiple-choice and true/false questions.
-5. Quiz repositories persist the quiz, questions, attempts, and answers.
-6. Review services expose score, explanations, history, and stale state.
+1. The user can generate a quiz either from one file or from a course-level bundle of several files.
+2. The app reuses current extracted documents and current summary artifacts for every selected file fingerprint.
+3. For course quizzes, selected source files carry explicit weights that affect how much context each file contributes to the prompt.
+4. The quiz generator calls local Ollama with a structured JSON prompt built from the weighted source bundle.
+5. Output is schema-validated before persistence.
+6. Repositories persist the quiz header, normalized source links, questions, attempts, and answers.
+7. Review services expose score, explanations, history, source-file mix, and stale state.
 
 ## Persistence Strategy
 
 Core persisted domains:
 
 - courses
+- course folders
 - files and file blobs
+- document assignments
+- import batches and import batch items
 - tags
 - events
 - reminders
 - notifications
 - settings
 - extracted documents
+- course profiles and document embeddings
 - summaries, sections, concepts
-- quizzes, questions, attempts, answers
+- quizzes, quiz source links, questions, attempts, answers
 
 Key persistence principles:
 
 - stable local-safe identifiers
 - timestamps on persisted entities
+- explicit provenance for assignment changes
 - additive derived artifacts instead of destructive overwrites
+- imported calendar events become normal local events instead of remote subscriptions
 - file fingerprint tracking for stale summary and stale quiz detection
+- quiz source links normalize multi-file course quizzes instead of collapsing them into synthetic file records
+- trash is implemented as a soft-delete state until the user permanently deletes a file
+- folders are workspace-scoped by `courseId`: a course folder keeps a course id, and a drive folder uses `courseId = null`
+- general-drive files can now live inside the same folder model instead of staying outside the folder tree
+- preserved import relative paths remain metadata, but direct drive imports can recreate matching drive folders when requested
 
-## Phase 4 Hardening Decisions
+## Assignment Strategy
 
-### Startup
+The smart import scorer is intentionally explainable and application-driven.
 
-The project now exposes explicit local run scripts:
+Primary signal:
 
-- `RUN_ME_WINDOWS.bat`
-- `RUN_ME_WINDOWS.ps1`
-- `RUN_ME_UNIX.sh`
-- `STOP_WINDOWS.ps1`
-- `STOP_UNIX.sh`
+- embedding similarity between the document representation and each course profile
 
-These scripts:
+Secondary signals:
 
-- check Node and npm availability
-- check dependencies
-- detect busy-port conditions
-- launch the dev server
-- store a PID for stop flows
+- overlap between filename or relative path and course metadata
+- overlap between filename or relative path and course profile keywords
+- modest folder-group consistency bonus inside one imported folder cluster
 
-### Verification
+Status output:
 
-The project now exposes:
+- `suggested` for strong score and clear margin
+- `needs_review` for usable but ambiguous matches
+- `unknown` for weak or unreliable matches
 
-- `npm run verify`
-- `npm run verify:full`
-- `npm run coverage`
-
-This keeps the main verification path short and repeatable while leaving e2e optional in the default verify flow.
-
-### Responsive Behavior
-
-Phase 4 focused on practical responsive hardening rather than introducing a new design system. Fixes centered on:
-
-- dialog width and padding
-- tab wrapping
-- mobile navigation labels
-- calendar overflow handling
-- quiz and summary panel stacking
-- date formatting width pressure
-
-### Localization
-
-Phase 4 tightened the English/French boundary by:
-
-- auditing both dictionaries
-- removing awkward or stale French wording
-- ensuring high-pressure UI areas still render acceptably with longer French labels
+The folder-group bonus is explicitly soft. It cannot override a clearly stronger semantic match from the document content.
 
 ## Browser and Runtime Limits
 
@@ -192,4 +247,5 @@ Phase 4 tightened the English/French boundary by:
 - browser notifications remain best-effort
 - preview and extraction quality depend on browser/runtime support
 - text-based PDF support does not imply OCR support
-- summaries and quizzes remain deterministic local heuristics, not cloud-model reasoning
+- DOCX and PPTX extraction are text-first OOXML reads, not layout-faithful rendering
+- local AI features depend on Ollama reachability and model availability
