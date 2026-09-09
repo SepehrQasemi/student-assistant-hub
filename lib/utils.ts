@@ -16,7 +16,11 @@ export function nowIso() {
 }
 
 export async function hashArrayBuffer(data: ArrayBuffer) {
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", data);
+  // Normalize buffers created by another realm (for example jsdom) before
+  // handing them to Node WebCrypto. Browsers accept the same BufferSource.
+  const bytes = new Uint8Array(data.byteLength);
+  bytes.set(new Uint8Array(data));
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest))
     .map((value) => value.toString(16).padStart(2, "0"))
     .join("");
