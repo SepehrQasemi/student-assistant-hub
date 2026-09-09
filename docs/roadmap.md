@@ -94,7 +94,7 @@ These are not completed and should remain clearly separated from shipped scope:
 
 - export and restore for local workspace portability
 - broader text-based PDF quality fixtures
-- stronger local text and embedding model evaluation for study quality
+- evaluate optional model-assisted study tools only as a separate future feature
 - reintroduce course-level multi-file study notes only after local model quality is reliable enough
 - stronger stale-artifact maintenance tools
 - study-session prioritization based on reminders, summaries, and attempts

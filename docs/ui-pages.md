@@ -174,6 +174,3 @@ Current UI goals:
 
 ### Key User Signals
 
-- whether Ollama is reachable
-- whether the text and embedding models are available
-- whether local AI-backed study features should work without extra setup
