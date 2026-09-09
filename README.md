@@ -2,6 +2,8 @@
 
 Offline-first student workspace for courses, files, calendars, reminders, summaries, and study quizzes. The application runs in the browser and stores user data in IndexedDB.
 
+![Student Assistant Hub dashboard](docs/screenshots/dashboard.png)
+
 ## What it does
 
 - organizes courses, files, deadlines, events, and reminders
